@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Withdraw Lock | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "table": "site_settings",
+ "mode": "single",
+ "idKey": "id",
+ "idValue": 1,
+ "title": "Withdraw Lock",
+ "description": "On karne par koi bhi user nayi withdrawal request nahi bhej sakta (database khud rok deta hai).",
+ "form": [
+  {
+   "key": "withdraw_locked",
+   "label": "Sab ke liye withdrawals band karein",
+   "type": "checkbox"
+  },
+  {
+   "key": "withdraw_lock_message",
+   "label": "User ko dikhane wala paigham",
+   "type": "textarea",
+   "maxlength": 300,
+   "placeholder": "Withdrawals abhi band hain."
+  }
+ ]
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio - User Earnings</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f3f6fc;color:#202b45}
+.sidebar{position:fixed;top:0;left:0;width:235px;height:100vh;background:#17233f;padding:24px 14px;overflow:auto}
+.brand{font-size:25px;font-weight:bold;color:#55dfb0;margin:0 10px 25px}
+.sidebar a{display:block;color:#d5deef;text-decoration:none;padding:12px 14px;border-radius:8px;margin:4px 0;font-size:14px}
+.sidebar a:hover,.sidebar a.active{background:#2c3c60;color:#55dfb0}
+.main{margin-left:235px;padding:28px}
+.header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:24px}
+.header h1{font-size:25px}
+.admin,.card,.panel{background:white;border-radius:12px;padding:20px;box-shadow:0 4px 18px #17233f0b}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-bottom:22px}
+.card p{font-size:13px;color:#7c879b;margin-bottom:12px}
+.card h2{font-size:25px;overflow-wrap:anywhere}
+.panel{margin-bottom:20px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.controls{display:flex;gap:10px;flex-wrap:wrap}
+input,select{padding:11px 12px;border:1px solid #dce3ef;border-radius:8px;background:white;max-width:100%}
+button{border:0;padding:11px 15px;border-radius:8px;background:#16a982;color:white;font-weight:bold;cursor:pointer}
+button:hover{opacity:.88}
+button:disabled{opacity:.5;cursor:not-allowed}
+.secondary{background:#315dc1}
+.danger{background:#ffe9e9;color:#bd3544}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:700px}
+th,td{text-align:left;padding:14px 12px;border-bottom:1px solid #edf0f6;font-size:13px}
+th{background:#f7f9fc;color:#758198}
+.pill{padding:6px 10px;border-radius:20px;background:#e4f8ef;color:#13885e;font-size:12px}
+.empty{text-align:center;color:#8994a7;padding:25px}
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.formgrid input,.formgrid select{width:100%}
+.note{font-size:12px;color:#7c879b;line-height:1.6;margin-top:15px}
+.notice{display:none;padding:12px;margin-bottom:16px;border-radius:8px;font-size:13px;overflow-wrap:anywhere}
+.notice.show{display:block}
+.notice.error{background:#ffe9e9;color:#bd3544}
+.notice.success{background:#e4f8ef;color:#13885e}
+.notice.info{background:#e8efff;color:#315dc1}
+@media(max-width:850px){.sidebar{width:190px}.main{margin-left:190px;padding:18px}.stats{grid-template-columns:1fr}}
+@media(max-width:560px){.sidebar{position:static;width:100%;height:auto}.brand{margin-bottom:10px}.sidebar a{display:inline-block;padding:9px}.main{margin:0;padding:14px}.stats{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.header h1{font-size:21px}}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+<div class="brand">Capitaxio</div>
+<a href="admin.html">Dashboard</a>
+<a href="manage-users.html">Manage Users</a>
+<a href="reward-history.html">Reward History</a>
+<a class="active" href="user-earnings.html">User Earnings</a>
+<a href="investment-report.html">Investment Report</a>
+<a href="deposits.html">Deposits</a>
+<a href="withdrawals.html">Withdrawals</a>
+<a href="reports-analytics.html">Report Analytics</a>
+<a href="admin-login.html" id="logoutLink">Logout</a>
+</aside>
+
+<main class="main">
+<div class="header">
+<h1>User Earnings</h1>
+<div class="admin">👤 Admin Panel</div>
+</div>
+
+<div id="notice" class="notice" role="status"></div>
+
+<section class="stats">
+<div class="card"><p>Total Earning Records</p><h2 id="total">0</h2></div>
+<div class="card"><p>Total Earnings</p><h2 id="sum">Rs. 0</h2></div>
+<div class="card"><p>Approved Earnings</p><h2 id="approved">Rs. 0</h2></div>
+</section>
+
+<section class="panel">
+<div class="toolbar">
+<h3>Add Earning Record</h3>
+</div>
+
+<div class="formgrid">
+<input id="userId" placeholder="User ID (required)">
+<input id="name" placeholder="User name">
+<input id="email" type="email" placeholder="User email (optional)">
+<input id="amount" type="number" min="0.01" step="0.01" placeholder="Earning amount (Rs.)">
+<select id="type">
+<option value="Reward">Reward</option>
+<option value="Referral">Referral</option>
+<option value="Investment">Investment</option>
+<option value="Bonus">Bonus</option>
+<option value="Other">Other</option>
+</select>
+<input id="date" type="date">
+<select id="status">
+<option value="Pending">Pending</option>
+<option value="Approved">Approved</option>
+<option value="Rejected">Rejected</option>
+</select>
+<button id="addBtn" onclick="addRecord()">Add Earning</button>
+</div>
+
+<p class="note">Records are saved in Supabase. Adding an earning record does not automatically credit a user's withdrawable balance.</p>
+</section>
+
+<section class="panel">
+<div class="toolbar">
+<h3>Earning Records</h3>
+<div class="controls">
+<input id="search" placeholder="Search user..." oninput="render()">
+<select id="filter" onchange="render()">
+<option value="All">All statuses</option>
+<option value="Pending">Pending</option>
+<option value="Approved">Approved</option>
+<option value="Rejected">Rejected</option>
+</select>
+<button class="secondary" id="exportBtn" onclick="exportCSV()">Export CSV</button>
+<button class="secondary" id="refreshBtn" onclick="loadRecords()">Refresh</button>
+</div>
+</div>
+
+<div class="tablewrap">
+<table>
+<thead>
+<tr><th>User</th><th>Type</th><th>Amount</th><th>Date</th><th>Status</th><th>Action</th></tr>
+</thead>
+<tbody id="rows">
+<tr><td colspan="6" class="empty">Loading records...</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL="https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY="sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+/*
+  Assumed table: user_earnings
+
+  Assumed columns:
+  id, user_id, user_name, email, type, amount, date, status
+
+  Change these constants if your database uses different column names.
+*/
+const TABLE="user_earnings";
+const ID_COL="id";
+const USER_ID_COL="user_id";
+const NAME_COL="user_name";
+const EMAIL_COL="email";
+const TYPE_COL="type";
+const AMOUNT_COL="amount";
+const DATE_COL="date";
+const STATUS_COL="status";
+
+let records=[];
+let busy=false;
+
+function safe(v){
+return String(v??"").replace(/[&<>"']/g,c=>({
+"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+}[c]));
+}
+
+function money(v){
+return "Rs. "+Number(v||0).toLocaleString("en-PK",{maximumFractionDigits:2});
+}
+
+function showNotice(message,type="info"){
+const el=document.getElementById("notice");
+el.textContent=message;
+el.className="notice show "+type;
+}
+
+function clearNotice(){
+const el=document.getElementById("notice");
+el.textContent="";
+el.className="notice";
+}
+
+function getStatus(r){
+const s=String(r[STATUS_COL]||"Pending").toLowerCase();
+if(s==="approved")return "Approved";
+if(s==="rejected")return "Rejected";
+if(s==="pending")return "Pending";
+return String(r[STATUS_COL]||"Pending");
+}
+
+function getName(r){
+return r[NAME_COL]||r.name||r[USER_ID_COL]||"Unknown user";
+}
+
+function getEmail(r){
+return r[EMAIL_COL]||"";
+}
+
+function getDate(r){
+if(!r[DATE_COL])return "—";
+const value=String(r[DATE_COL]);
+if(/^\d{4}-\d{2}-\d{2}$/.test(value))return value;
+const d=new Date(value);
+return Number.isNaN(d.getTime())?value:d.toLocaleDateString("en-GB");
+}
+
+function render(){
+const query=document.getElementById("search").value.toLowerCase().trim();
+const filter=document.getElementById("filter").value;
+
+document.getElementById("total").textContent=records.length;
+
+document.getElementById("sum").textContent=money(
+records.reduce((sum,r)=>sum+Number(r[AMOUNT_COL]||0),0)
+);
+
+document.getElementById("approved").textContent=money(
+records.filter(r=>getStatus(r)==="Approved")
+.reduce((sum,r)=>sum+Number(r[AMOUNT_COL]||0),0)
+);
+
+const filtered=records.filter(r=>{
+const matches=(getName(r).toLowerCase().includes(query)||
+getEmail(r).toLowerCase().includes(query)||
+String(r[USER_ID_COL]||"").toLowerCase().includes(query));
+return matches&&(filter==="All"||getStatus(r)===filter);
+});
+
+const tbody=document.getElementById("rows");
+
+if(!filtered.length){
+tbody.innerHTML='<tr><td colspan="6" class="empty">No earning records found.</td></tr>';
+return;
+}
+
+tbody.innerHTML=filtered.map(r=>{
+const status=getStatus(r);
+const pillStyle=status==="Rejected"
+?"background:#ffe9e9;color:#bd3544"
+:status==="Pending"
+?"background:#fff0dd;color:#a76b14"
+:"";
+
+return `<tr>
+<td><strong>${safe(getName(r))}</strong><br>
+${safe(getEmail(r))}<br>
+<small>${safe(r[USER_ID_COL]||"")}</small></td>
+<td>${safe(r[TYPE_COL]||"Other")}</td>
+<td>${money(r[AMOUNT_COL])}</td>
+<td>${safe(getDate(r))}</td>
+<td><span class="pill" style="${pillStyle}">${safe(status)}</span></td>
+<td><button class="danger" data-delete="${safe(r[ID_COL])}">Delete</button></td>
+</tr>`;
+}).join("");
+}
+
+async function loadRecords(){
+if(busy)return;
+busy=true;
+clearNotice();
+
+const btn=document.getElementById("refreshBtn");
+btn.disabled=true;
+btn.textContent="Loading...";
+
+document.getElementById("rows").innerHTML=
+'<tr><td colspan="6" class="empty">Loading records...</td></tr>';
+
+try{
+const {data,error}=await db
+.from(TABLE)
+.select("*")
+.order(DATE_COL,{ascending:false});
+
+if(error)throw error;
+
+records=data||[];
+render();
+showNotice("Earning records loaded from Supabase.","success");
+}catch(error){
+records=[];
+render();
+showNotice(
+"Records load nahi huay. Table/column names aur RLS policies check karein. Details: "+
+(error.message||"Unknown error"),
+"error"
+);
+}finally{
+busy=false;
+btn.disabled=false;
+btn.textContent="Refresh";
+}
+}
+
+async function addRecord(){
+if(busy)return;
+
+const userId=document.getElementById("userId").value.trim();
+const name=document.getElementById("name").value.trim();
+const email=document.getElementById("email").value.trim();
+const amountValue=document.getElementById("amount").value;
+const amount=Number(amountValue);
+const type=document.getElementById("type").value;
+const date=document.getElementById("date").value||
+new Date().toISOString().slice(0,10);
+const status=document.getElementById("status").value;
+
+if(!userId){
+showNotice("User ID zaroor enter karein.","error");
+return;
+}
+if(!name){
+showNotice("User name enter karein.","error");
+return;
+}
+if(amountValue===""||!Number.isFinite(amount)||amount<=0){
+showNotice("Valid earning amount enter karein.","error");
+return;
+}
+
+const payload={
+[USER_ID_COL]:userId,
+[NAME_COL]:name,
+[EMAIL_COL]:email||null,
+[TYPE_COL]:type,
+[AMOUNT_COL]:amount,
+[DATE_COL]:date,
+[STATUS_COL]:status
+};
+
+busy=true;
+const btn=document.getElementById("addBtn");
+btn.disabled=true;
+btn.textContent="Saving...";
+clearNotice();
+
+try{
+const {error}=await db.from(TABLE).insert(payload);
+if(error)throw error;
+
+document.getElementById("userId").value="";
+document.getElementById("name").value="";
+document.getElementById("email").value="";
+document.getElementById("amount").value="";
+document.getElementById("date").value="";
+document.getElementById("type").value="Reward";
+document.getElementById("status").value="Pending";
+
+await reloadRecords();
+render();
+showNotice("Earning record database mein save ho gaya.","success");
+}catch(error){
+showNotice("Record save nahi hua: "+(error.message||"Check table columns and RLS policies."),"error");
+}finally{
+busy=false;
+btn.disabled=false;
+btn.textContent="Add Earning";
+}
+}
+
+async function deleteRecord(id){
+if(busy)return;
+if(!confirm("Kya aap is earning record ko permanently delete karna chahte hain?"))return;
+
+busy=true;
+clearNotice();
+
+try{
+const {data,error}=await db
+.from(TABLE)
+.delete()
+.eq(ID_COL,id)
+.select();
+
+if(error)throw error;
+if(!data||data.length===0){
+throw new Error("Record delete nahi hua. Database permissions/RLS check karein.");
+}
+
+await reloadRecords();
+render();
+showNotice("Earning record delete ho gaya.","success");
+}catch(error){
+showNotice("Delete nahi hua: "+(error.message||"Unknown error"),"error");
+}finally{
+busy=false;
+}
+}
+
+async function reloadRecords(){
+const {data,error}=await db
+.from(TABLE)
+.select("*")
+.order(DATE_COL,{ascending:false});
+
+if(error)throw error;
+records=data||[];
+}
+
+function exportCSV(){
+if(!records.length){
+showNotice("Export ke liye koi record nahi hai.","info");
+return;
+}
+
+const quote=v=>'"'+String(v??"").replace(/"/g,'""')+'"';
+const lines=[
+["User ID","User","Email","Type","Amount","Date","Status"].map(quote).join(","),
+...records.map(r=>[
+r[USER_ID_COL],getName(r),getEmail(r),r[TYPE_COL],
+r[AMOUNT_COL],getDate(r),getStatus(r)
+].map(quote).join(","))
+];
+
+const blob=new Blob(["\uFEFF"+lines.join("\r\n)],{
+type:"text/csv;charset=utf-8;"
+});
+const url=URL.createObjectURL(blob);
+const a=document.createElement("a");
+a.href=url;
+a.download="capitaxio-user-earnings.csv";
+a.click();
+setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+document.getElementById("rows").addEventListener("click",async e=>{
+const button=e.target.closest("button[data-delete]");
+if(!button||busy)return;
+await deleteRecord(button.dataset.delete);
+});
+
+document.getElementById("logoutLink").addEventListener("click",async e=>{
+e.preventDefault();
+const {error}=await db.auth.signOut();
+if(error){
+showNotice("Logout issue: "+error.message,"error");
+return;
+}
+window.location.href="admin-login.html";
+});
+
+loadRecords();
+</script>
+</body>
+</html>

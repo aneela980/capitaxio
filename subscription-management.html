@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio - Subscription Management</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f4f6fb;color:#243047}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:235px;flex-shrink:0;background:#172238;color:#fff;padding:24px 15px}
+.brand{font-size:23px;font-weight:bold;color:#54dfb1;margin:0 10px 8px}
+.sub{font-size:11px;color:#aebbd0;margin:0 10px 25px}
+.sidebar a{display:block;color:#d8dfeb;text-decoration:none;padding:12px;border-radius:7px;margin:5px 0;font-size:14px}
+.sidebar a:hover,.sidebar a.active{background:#293951;color:#54dfb1}
+.main{flex:1;min-width:0;padding:28px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:24px}
+h1{font-size:26px;margin-bottom:7px}
+.muted{font-size:13px;color:#78859a}
+.badge{background:#dcf9ed;color:#16835f;padding:9px 13px;border-radius:20px;font-size:12px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin-bottom:22px}
+.stat,.panel{background:white;border-radius:12px;padding:20px;box-shadow:0 3px 15px #1722380a;margin-bottom:20px}
+.stat p{font-size:13px;color:#78859a;margin-bottom:12px}
+.stat h2{font-size:27px}
+.panel h2{font-size:18px;margin-bottom:8px}
+.desc{font-size:13px;color:#78859a;line-height:1.6}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+input,select{padding:11px;border:1px solid #dce2eb;border-radius:7px;background:#fff;font-size:13px;min-width:130px}
+input{flex:1}
+button{padding:11px 14px;border:0;border-radius:7px;cursor:pointer;font-weight:bold;font-size:12px}
+.primary{background:#20b987;color:#102b25}
+.gray{background:#edf1f7;color:#344158}
+.green{background:#d8f7e8;color:#137b53}
+.red{background:#ffe5e5;color:#b83232}
+.orange{background:#fff0d6;color:#956414}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:850px}
+th,td{text-align:left;padding:14px 12px;border-bottom:1px solid #edf0f5;font-size:13px}
+th{color:#778399;font-size:12px;background:#fafbfd}
+.status{display:inline-block;padding:6px 9px;border-radius:20px;font-size:11px;font-weight:bold}
+.active{background:#d8f7e8;color:#137b53}
+.pending{background:#fff0d6;color:#956414}
+.cancelled,.expired{background:#ffe5e5;color:#b83232}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.empty{text-align:center;padding:28px;color:#78859a}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:18px}
+.field label{display:block;font-size:13px;font-weight:bold;margin-bottom:7px}
+.field input,.field select{width:100%}
+.note{font-size:12px;color:#78859a;line-height:1.6;margin-top:15px}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.layout{display:block}.sidebar{width:100%;padding:15px}.sidebar a{display:inline-block;padding:9px}.main{padding:16px}.form-grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}h1{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="brand">Capitaxio</div>
+  <div class="sub">ADMIN CONTROL PANEL</div>
+  <a href="admin.html">Dashboard</a>
+  <a href="manage-users.html">Manage Users</a>
+  <a href="salary-packages.html">Salary Packages</a>
+  <a href="subscription-management.html" class="active">Subscription Management</a>
+  <a href="jobs-settings.html">Job Settings</a>
+  <a href="job-application.html">Job Applications</a>
+  <a href="deposits.html">Deposits</a>
+  <a href="withdrawals.html">Withdrawals</a>
+  <a href="reports-analytics.html">Reports & Analytics</a>
+  <a href="system-configuration.html">System Configuration</a>
+  <a href="admin-login.html">Logout</a>
+</aside>
+
+<main class="main">
+  <div class="top">
+    <div>
+      <h1>Subscription Management</h1>
+      <p class="muted">Manage subscription plans and member subscriptions.</p>
+    </div>
+    <span class="badge">Capitaxio Admin</span>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><p>Total Subscriptions</p><h2 id="total">0</h2></div>
+    <div class="stat"><p>Active</p><h2 id="activeCount">0</h2></div>
+    <div class="stat"><p>Pending</p><h2 id="pendingCount">0</h2></div>
+    <div class="stat"><p>Cancelled / Expired</p><h2 id="inactiveCount">0</h2></div>
+  </div>
+
+  <section class="panel">
+    <h2>Add Subscription</h2>
+    <p class="desc">Enter a subscription record for demo/testing purposes.</p>
+    <form id="subscriptionForm" class="form-grid">
+      <div class="field">
+        <label for="member">Member Name</label>
+        <input id="member" placeholder="Enter member name" required>
+      </div>
+      <div class="field">
+        <label for="email">Member Email</label>
+        <input id="email" type="email" placeholder="member@example.com" required>
+      </div>
+      <div class="field">
+        <label for="plan">Subscription Plan</label>
+        <select id="plan" required>
+          <option value="Basic">Basic</option>
+          <option value="Standard">Standard</option>
+          <option value="Premium">Premium</option>
+          <option value="VIP">VIP</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="amount">Plan Price (PKR)</label>
+        <input id="amount" type="number" min="0" step="0.01" placeholder="0.00" required>
+      </div>
+      <div class="field">
+        <label for="startDate">Start Date</label>
+        <input id="startDate" type="date" required>
+      </div>
+      <div class="field">
+        <label for="endDate">End Date</label>
+        <input id="endDate" type="date" required>
+      </div>
+      <div class="field">
+        <label for="newStatus">Status</label>
+        <select id="newStatus">
+          <option>Pending</option>
+          <option>Active</option>
+          <option>Cancelled</option>
+          <option>Expired</option>
+        </select>
+      </div>
+      <div class="field" style="display:flex;align-items:end">
+        <button type="submit" class="primary" style="width:100%">Add Subscription</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Subscription Records</h2>
+    <p class="desc">Search records, filter by status and update subscriptions.</p>
+    <div class="tools">
+      <input id="search" placeholder="Search member, email, plan...">
+      <select id="filter">
+        <option value="All">All Statuses</option>
+        <option>Active</option>
+        <option>Pending</option>
+        <option>Cancelled</option>
+        <option>Expired</option>
+      </select>
+      <button class="gray" id="export">Export CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Member</th><th>Plan</th><th>Price</th><th>Start Date</th>
+            <th>End Date</th><th>Status</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="note">Demo mode: records are saved in this browser only. This page does not process payments or activate subscriptions in a real database.</p>
+  </section>
+</main>
+</div>
+
+<script>
+const KEY = "capitaxio_subscription_management_v1";
+let records = [];
+
+try {
+  const saved = JSON.parse(localStorage.getItem(KEY) || "[]");
+  records = Array.isArray(saved) ? saved : [];
+} catch(e) {
+  records = [];
+}
+
+const $ = id => document.getElementById(id);
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  }[ch]));
+}
+
+function save() {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(records));
+    return true;
+  } catch(e) {
+    alert("Unable to save data in browser storage.");
+    return false;
+  }
+}
+
+function render() {
+  $("total").textContent = records.length;
+  $("activeCount").textContent = records.filter(r=>r.status==="Active").length;
+  $("pendingCount").textContent = records.filter(r=>r.status==="Pending").length;
+  $("inactiveCount").textContent = records.filter(r=>["Cancelled","Expired"].includes(r.status)).length;
+
+  const q = $("search").value.trim().toLowerCase();
+  const status = $("filter").value;
+
+  const filtered = records.filter(r => {
+    const matches = [r.member,r.email,r.plan].some(v=>String(v).toLowerCase().includes(q));
+    return matches && (status==="All" || r.status===status);
+  });
+
+  $("rows").innerHTML = filtered.length ? filtered.map(r => `
+    <tr>
+      <td><strong>${escapeHTML(r.member)}</strong><br><span class="muted">${escapeHTML(r.email)}</span></td>
+      <td>${escapeHTML(r.plan)}</td>
+      <td>Rs. ${Number(r.amount).toLocaleString("en-PK")}</td>
+      <td>${escapeHTML(r.startDate)}</td>
+      <td>${escapeHTML(r.endDate)}</td>
+      <td><span class="status ${r.status.toLowerCase()}">${escapeHTML(r.status)}</span></td>
+      <td><div class="actions">
+        <button class="green" data-action="Active" data-id="${escapeHTML(r.id)}">Activate</button>
+        <button class="orange" data-action="Pending" data-id="${escapeHTML(r.id)}">Pending</button>
+        <button class="red" data-action="Cancelled" data-id="${escapeHTML(r.id)}">Cancel</button>
+        <button class="gray" data-action="Delete" data-id="${escapeHTML(r.id)}">Delete</button>
+      </div></td>
+    </tr>`).join("") : '<tr><td colspan="7" class="empty">No subscription records found.</td></tr>';
+}
+
+$("subscriptionForm").addEventListener("submit", event => {
+  event.preventDefault();
+
+  const startDate = $("startDate").value;
+  const endDate = $("endDate").value;
+  if (endDate < startDate) {
+    alert("End date cannot be earlier than start date.");
+    return;
+  }
+
+  const record = {
+    id: Date.now(),
+    member: $("member").value.trim(),
+    email: $("email").value.trim(),
+    plan: $("plan").value,
+    amount: Number($("amount").value),
+    startDate,
+    endDate,
+    status: $("newStatus").value
+  };
+
+  if (!record.member || !record.email || !Number.isFinite(record.amount) || record.amount < 0) {
+    alert("Please enter valid subscription details.");
+    return;
+  }
+
+  records.unshift(record);
+  if (save()) {
+    event.target.reset();
+    render();
+    alert("Subscription record added.");
+  }
+});
+
+$("rows").addEventListener("click", event => {
+  const btn = event.target.closest("button[data-action]");
+  if (!btn) return;
+
+  const id = Number(btn.dataset.id);
+  const action = btn.dataset.action;
+  const record = records.find(r=>Number(r.id)===id);
+  if (!record) return;
+
+  if (action === "Delete") {
+    if (!confirm("Delete this subscription record?")) return;
+    records = records.filter(r=>Number(r.id)!==id);
+  } else {
+    record.status = action;
+  }
+
+  save();
+  render();
+});
+
+$("search").addEventListener("input", render);
+$("filter").addEventListener("change", render);
+
+$("export").addEventListener("click", () => {
+  const headers = ["ID","Member","Email","Plan","Price PKR","Start Date","End Date","Status"];
+  const cell = v => '"' + String(v ?? "").replace(/"/g,'""') + '"';
+  const csv = [headers, ...records.map(r=>[
+    r.id,r.member,r.email,r.plan,r.amount,r.startDate,r.endDate,r.status
+  ])].map(row=>row.map(cell).join(",")).join("\r\n");
+
+  const blob = new Blob(["\uFEFF"+csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "capitaxio-subscriptions.csv";
+  link.click();
+  URL.revokeObjectURL(url);
+});
+
+$("startDate").value = new Date().toISOString().slice(0,10);
+$("endDate").value = new Date(Date.now()+30*86400000).toISOString().slice(0,10);
+render();
+</script>
+</body>
+</html>

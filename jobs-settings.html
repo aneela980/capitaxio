@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio | Jobs Settings</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#081326;color:#eef4ff;padding:25px}
+.container{max-width:1200px;margin:auto}
+.header{background:#102b68;padding:25px;border-radius:12px;margin-bottom:22px}
+.header h1{font-size:25px;margin-bottom:8px}
+.header p{color:#c7d8f5;font-size:14px}
+.panel{background:#13213a;border:1px solid #263b5e;border-radius:12px;padding:22px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.top h2{font-size:19px}
+input{background:#081326;border:1px solid #344b70;color:white;padding:12px;border-radius:7px;outline:none;min-width:220px}
+button{background:#17bce8;color:#061426;border:0;padding:12px 18px;border-radius:7px;font-weight:bold;cursor:pointer}
+button:hover{opacity:.85}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:600px}
+th,td{padding:14px;text-align:left;border-bottom:1px solid #263b5e;font-size:13px;word-break:break-word}
+th{background:#102b68;color:#fff}
+td{color:#dce8fa}
+#message{color:#9eb4d5;margin:12px 0;font-size:14px}
+.note{margin-top:18px;padding:13px;background:#0c1a30;border-radius:8px;color:#9eb4d5;font-size:13px}
+@media(max-width:600px){body{padding:12px}.header h1{font-size:21px}.panel{padding:14px}.top{align-items:stretch}input{width:100%}}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div class="header">
+<h1>Jobs Settings</h1>
+<p>Manage and view job settings records in your Capitaxio admin panel.</p>
+</div>
+
+<div class="panel">
+<div class="top">
+<h2>Jobs Settings Records</h2>
+<div>
+<input type="search" id="search" placeholder="Search records...">
+<button onclick="loadJobs()">Refresh</button>
+</div>
+</div>
+
+<p id="message">Loading jobs settings...</p>
+
+<div class="table-wrap">
+<table>
+<thead id="tableHead"></thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+
+<div class="note">
+This page displays records from Supabase. It is currently read-only; no job settings are changed or saved from this page.
+</div>
+</div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let records = [];
+
+function safe(value){
+    if(value === null || value === undefined) return "";
+    return String(value).replace(/[&<>"']/g, function(char){
+        return {
+            "&":"&amp;",
+            "<":"&lt;",
+            ">":"&gt;",
+            '"':"&quot;",
+            "'":"&#039;"
+        }[char];
+    });
+}
+
+async function loadJobs(){
+    const message = document.getElementById("message");
+    message.textContent = "Loading records...";
+
+    try{
+        const {data,error} = await db
+            .from("jobs_settings")
+            .select("*");
+
+        if(error){
+            records = [];
+            document.getElementById("tableHead").innerHTML = "";
+            document.getElementById("tableBody").innerHTML = "";
+            message.textContent = "Database error: " + error.message;
+            return;
+        }
+
+        records = data || [];
+        renderJobs();
+
+    }catch(error){
+        message.textContent = "Error: " + error.message;
+    }
+}
+
+function renderJobs(){
+    const head = document.getElementById("tableHead");
+    const body = document.getElementById("tableBody");
+    const message = document.getElementById("message");
+
+    const search = document.getElementById("search").value.toLowerCase();
+
+    const filtered = records.filter(row =>
+        Object.values(row).some(value =>
+            String(value ?? "").toLowerCase().includes(search)
+        )
+    );
+
+    head.innerHTML = "";
+    body.innerHTML = "";
+
+    if(records.length === 0){
+        message.textContent = "No jobs settings records found.";
+        return;
+    }
+
+    const columns = Object.keys(records[0]);
+
+    head.innerHTML = "<tr>" + columns.map(col =>
+        "<th>" + safe(col.replaceAll("_"," ")) + "</th>"
+    ).join("") + "</tr>";
+
+    if(filtered.length === 0){
+        message.textContent = "No matching records found.";
+        return;
+    }
+
+    message.textContent = filtered.length + " record(s) found.";
+
+    filtered.forEach(row => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = columns.map(col =>
+            "<td>" + safe(row[col]) + "</td>"
+        ).join("");
+
+        body.appendChild(tr);
+    });
+}
+
+document.getElementById("search").addEventListener("input",renderJobs);
+
+loadJobs();
+</script>
+</body>
+</html>

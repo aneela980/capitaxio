@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notification Templates | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "description": "Paigham ke tayyar sanche (jaise welcome ya deposit approve). Abhi ye sirf mehfooz hote hain, khud bhejne ka system alag se banega.",
+ "table": "notification_templates",
+ "orderBy": "created_at",
+ "columns": [
+  {
+   "key": "name",
+   "label": "Name",
+   "type": "text"
+  },
+  {
+   "key": "subject",
+   "label": "Subject",
+   "type": "text"
+  },
+  {
+   "key": "body",
+   "label": "Message",
+   "type": "text"
+  },
+  {
+   "key": "is_active",
+   "label": "Active",
+   "type": "bool"
+  },
+  {
+   "key": "created_at",
+   "label": "Date",
+   "type": "date"
+  }
+ ],
+ "form": [
+  {
+   "key": "name",
+   "label": "Template ka naam",
+   "type": "text",
+   "required": true,
+   "maxlength": 80
+  },
+  {
+   "key": "subject",
+   "label": "Subject",
+   "type": "text",
+   "maxlength": 150
+  },
+  {
+   "key": "body",
+   "label": "Paigham",
+   "type": "textarea",
+   "required": true,
+   "maxlength": 2000
+  },
+  {
+   "key": "is_active",
+   "label": "Active",
+   "type": "checkbox",
+   "default": true
+  }
+ ],
+ "canAdd": true,
+ "canEdit": true,
+ "canDelete": true,
+ "toggleKey": "is_active",
+ "searchKeys": [
+  "name",
+  "subject",
+  "body"
+ ],
+ "addLabel": "+ New Template",
+ "title": "Notification Templates"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

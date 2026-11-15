@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Report Analytic | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "description": "Pichle 60 din ka roz ka hisaab: approved deposits, approved withdrawals aur naye users (Pakistan ke waqt ke mutabiq).",
+ "table": "daily_report",
+ "orderBy": "day",
+ "ascending": false,
+ "columns": [
+  {
+   "key": "day",
+   "label": "Din",
+   "type": "date"
+  },
+  {
+   "key": "deposits_approved",
+   "label": "Deposits",
+   "type": "money"
+  },
+  {
+   "key": "withdrawals_approved",
+   "label": "Withdrawals",
+   "type": "money"
+  },
+  {
+   "key": "new_users",
+   "label": "Naye Users",
+   "type": "text"
+  }
+ ],
+ "title": "Report Analytic"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

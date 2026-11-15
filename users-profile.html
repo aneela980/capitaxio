@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Users Profile | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "description": "Users ki maloomat dekhna aur theek karna (naam, mobile, pata, status). Balance yahan se nahi badalta.",
+ "table": "users",
+ "orderBy": "created_at",
+ "columns": [
+  {
+   "key": "full_name",
+   "label": "Name",
+   "type": "text"
+  },
+  {
+   "key": "email",
+   "label": "Email",
+   "type": "text"
+  },
+  {
+   "key": "mobile",
+   "label": "Mobile",
+   "type": "text"
+  },
+  {
+   "key": "country",
+   "label": "Country",
+   "type": "text"
+  },
+  {
+   "key": "referral_code",
+   "label": "Referral Code",
+   "type": "text"
+  },
+  {
+   "key": "balance",
+   "label": "Balance",
+   "type": "money"
+  },
+  {
+   "key": "status",
+   "label": "Status",
+   "type": "badge"
+  },
+  {
+   "key": "created_at",
+   "label": "Joined",
+   "type": "date"
+  }
+ ],
+ "form": [
+  {
+   "key": "full_name",
+   "label": "Full Name",
+   "type": "text",
+   "required": true,
+   "maxlength": 100
+  },
+  {
+   "key": "mobile",
+   "label": "Mobile",
+   "type": "text",
+   "maxlength": 20
+  },
+  {
+   "key": "country",
+   "label": "Country",
+   "type": "text",
+   "maxlength": 80
+  },
+  {
+   "key": "address",
+   "label": "Address",
+   "type": "textarea",
+   "maxlength": 500
+  },
+  {
+   "key": "status",
+   "label": "Status",
+   "type": "select",
+   "options": [
+    "active",
+    "banned"
+   ],
+   "default": "active"
+  }
+ ],
+ "canEdit": true,
+ "searchKeys": [
+  "full_name",
+  "email",
+  "mobile",
+  "referral_code"
+ ],
+ "title": "Users Profile"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Today Deposit Users | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "description": "Wo users jin ka aaj (Pakistan ke waqt ke mutabiq) deposit approve hua.",
+ "table": "users_deposited_today",
+ "orderBy": "last_deposit",
+ "columns": [
+  {
+   "key": "full_name",
+   "label": "Name",
+   "type": "text"
+  },
+  {
+   "key": "email",
+   "label": "Email",
+   "type": "text"
+  },
+  {
+   "key": "deposit_count",
+   "label": "Deposits Today",
+   "type": "text"
+  },
+  {
+   "key": "total_deposited",
+   "label": "Amount",
+   "type": "money"
+  },
+  {
+   "key": "last_deposit",
+   "label": "Time",
+   "type": "datetime"
+  }
+ ],
+ "searchKeys": [
+  "full_name",
+  "email"
+ ],
+ "title": "Today Deposit Users"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

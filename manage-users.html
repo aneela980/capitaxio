@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Users | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+body { background: #f4f6fc; color: #202943; }
+.layout { display: flex; min-height: 100vh; }
+.sidebar { width: 250px; background: #151a35; color: white; padding: 25px 15px; position: fixed; top: 0; bottom: 0; left: 0; overflow-y: auto; z-index: 10; }
+.logo { font-size: 23px; font-weight: bold; padding: 0 12px 28px; color: #a99aff; }
+.menu-title { color: #858ba9; font-size: 11px; margin: 20px 12px 10px; text-transform: uppercase; letter-spacing: 1px; }
+.sidebar a { display: block; color: #c4c9df; text-decoration: none; padding: 12px; border-radius: 8px; margin: 4px 0; font-size: 14px; }
+.sidebar a:hover, .sidebar a.active { background: #7058dc; color: white; }
+.main { margin-left: 250px; width: calc(100% - 250px); padding: 28px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 28px; }
+.topbar h1 { font-size: 25px; }
+.topbar p { color: #858ba1; font-size: 13px; margin-top: 7px; }
+.admin-label { background: #e9e4ff; color: #6048c5; padding: 10px 14px; border-radius: 9px; font-size: 13px; font-weight: bold; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 25px; }
+.stat-card, .panel { background: white; border-radius: 13px; padding: 22px; box-shadow: 0 4px 20px #1b28500a; }
+.stat-card p { color: #858ba1; font-size: 13px; margin-bottom: 12px; }
+.stat-card h2 { font-size: 25px; }
+.panel-heading { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 20px; }
+.panel-heading h2 { font-size: 19px; }
+.controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+input, select { padding: 11px 13px; border: 1px solid #e0e4ef; border-radius: 8px; outline: none; background: white; color: #202943; }
+input:focus, select:focus { border-color: #7058dc; }
+#search { flex: 1; min-width: 180px; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 720px; }
+th { background: #f7f8fc; color: #777f98; font-size: 12px; text-align: left; padding: 15px 12px; }
+td { padding: 15px 12px; border-bottom: 1px solid #eef0f6; font-size: 13px; }
+.user-name { font-weight: bold; }
+.user-email { color: #858ba1; font-size: 12px; margin-top: 5px; }
+.status { padding: 6px 9px; border-radius: 20px; font-size: 11px; font-weight: bold; display: inline-block; }
+.active-status { background: #e0f8ed; color: #168354; }
+.banned-status { background: #ffe5e8; color: #c6374b; }
+.pending-status { background: #fff2d7; color: #9b6a08; }
+.action-btn { border: none; padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; margin: 2px; }
+.view-btn { background: #eae6ff; color: #6249cf; }
+.ban-btn { background: #ffe5e8; color: #c6374b; }
+.unban-btn { background: #e0f8ed; color: #168354; }
+.empty { text-align: center; padding: 30px; color: #858ba1; }
+.pagination { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 18px; color: #858ba1; font-size: 13px; }
+.primary-btn { background: #7058dc; color: white; border: none; border-radius: 8px; padding: 11px 15px; cursor: pointer; }
+.modal { display: none; position: fixed; inset: 0; background: #10152dbb; z-index: 30; justify-content: center; align-items: center; padding: 18px; }
+.modal-box { background: white; border-radius: 14px; padding: 25px; width: 100%; max-width: 440px; }
+.modal-box h2 { margin-bottom: 18px; }
+.detail-row { padding: 12px 0; border-bottom: 1px solid #edf0f6; font-size: 14px; overflow-wrap: anywhere; }
+.detail-row strong { display: inline-block; width: 105px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.secondary-btn { background: #edf0f6; border: none; border-radius: 8px; padding: 11px 15px; cursor: pointer; }
+.menu-toggle { display: none; background: #7058dc; color: white; border: none; padding: 10px 13px; border-radius: 7px; cursor: pointer; }
+.note { display: none; margin-bottom: 18px; padding: 13px; border-radius: 8px; font-size: 13px; line-height: 1.6; background: #ffe5e8; color: #c6374b; }
+.note.show { display: block; }
+.note.ok { background: #e0f8ed; color: #168354; }
+
+@media (max-width: 900px) {
+    .sidebar { transform: translateX(-100%); transition: .25s; }
+    .sidebar.show { transform: translateX(0); }
+    .main { margin-left: 0; width: 100%; padding: 18px; }
+    .menu-toggle { display: inline-block; }
+    .stats { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 500px) {
+    .topbar { align-items: flex-start; flex-wrap: wrap; }
+    .topbar h1 { font-size: 22px; }
+    .panel { padding: 15px; }
+}
+</style>
+</head>
+
+<body style="visibility:hidden">
+
+<div class="layout">
+
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">CAPITAXIO</div>
+
+        <div class="menu-title">Main Menu</div>
+        <a href="admin.html">Dashboard</a>
+        <a href="general-settings.html">General Setting</a>
+        <a href="manage-users.html" class="active">Manage Users</a>
+
+        <div class="menu-title">User Management</div>
+        <a href="manage-users.html">All Users</a>
+        <a href="manage-users.html?status=active">Active Users</a>
+        <a href="manage-users.html?status=banned">Banned Users</a>
+
+        <div class="menu-title">Payments</div>
+        <a href="deposits.html">Deposits</a>
+        <a href="withdrawals.html">Withdrawals</a>
+        <a href="payment-gateways.html">Payment Gateways</a>
+
+        <div class="menu-title">Settings</div>
+        <a href="system-configuration.html">System Configuration</a>
+        <a href="admin-login.html" id="logoutLink">Logout</a>
+    </aside>
+
+    <main class="main">
+
+        <header class="topbar">
+            <div>
+                <button class="menu-toggle" id="menuToggle">☰ Menu</button>
+                <h1 style="margin-top:12px;">Manage Users</h1>
+                <p>View and manage registered user accounts.</p>
+            </div>
+            <div class="admin-label">ADMIN PANEL</div>
+        </header>
+
+        <div class="note" id="note" role="status"></div>
+
+        <section class="stats">
+            <div class="stat-card">
+                <p>Total Users</p>
+                <h2 id="totalCount">0</h2>
+            </div>
+            <div class="stat-card">
+                <p>Active Users</p>
+                <h2 id="activeCount">0</h2>
+            </div>
+            <div class="stat-card">
+                <p>Banned Users</p>
+                <h2 id="bannedCount">0</h2>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-heading">
+                <h2>All Registered Users</h2>
+            </div>
+
+            <div class="controls">
+                <input type="search" id="search"
+                       placeholder="Search name, email or mobile...">
+
+                <select id="statusFilter">
+                    <option value="all">All Statuses</option>
+                    <option value="active">Active</option>
+                    <option value="banned">Banned</option>
+                    <option value="pending">Pending</option>
+                </select>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>USER</th>
+                            <th>MOBILE</th>
+                            <th>JOINED</th>
+                            <th>STATUS</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTable"></tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <span id="resultCount">0 users</span>
+                <button class="primary-btn" id="refreshBtn">↻ Refresh</button>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<div class="modal" id="userModal">
+    <div class="modal-box">
+        <h2>User Details</h2>
+        <div id="userDetails"></div>
+        <div class="modal-actions">
+            <button class="secondary-btn" id="closeModal">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let users = [];
+
+const table = document.getElementById("usersTable");
+const search = document.getElementById("search");
+const statusFilter = document.getElementById("statusFilter");
+const note = document.getElementById("note");
+
+function showNote(text, ok) {
+    note.textContent = text;
+    note.className = "note show" + (ok ? " ok" : "");
+}
+
+// Admin guard: login aur active admin hona zaroori
+async function guard() {
+    const { data: s } = await db.auth.getSession();
+    if (!s.session) { window.location.replace("admin-login.html"); return false; }
+
+    const { data: a } = await db.from("admins").select("id")
+        .eq("user_id", s.session.user.id).eq("is_active", true).maybeSingle();
+
+    if (!a) {
+        await db.auth.signOut();
+        window.location.replace("admin-login.html");
+        return false;
+    }
+    document.body.style.visibility = "visible";
+    return true;
+}
+
+function statusOf(user) {
+    return String(user.status || "").toLowerCase();
+}
+
+function label(value) {
+    const text = String(value || "");
+    return text ? text.charAt(0).toUpperCase() + text.slice(1).toLowerCase() : "—";
+}
+
+function formatDate(value) {
+    if (!value) return "";
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
+}
+
+function makeButton(text, className, handler) {
+    const b = document.createElement("button");
+    b.className = "action-btn " + className;
+    b.textContent = text;
+    b.addEventListener("click", handler);
+    return b;
+}
+
+function renderUsers() {
+    const term = search.value.toLowerCase().trim();
+    const selected = statusFilter.value;
+
+    const filtered = users.filter(user => {
+        const matchesSearch =
+            String(user.full_name || "").toLowerCase().includes(term) ||
+            String(user.email || "").toLowerCase().includes(term) ||
+            String(user.mobile || "").includes(term);
+        const matchesStatus = selected === "all" || statusOf(user) === selected;
+        return matchesSearch && matchesStatus;
+    });
+
+    table.textContent = "";
+
+    if (filtered.length === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 5;
+        td.className = "empty";
+        td.textContent = "No users found.";
+        tr.appendChild(td);
+        table.appendChild(tr);
+    } else {
+        filtered.forEach(user => {
+            const st = statusOf(user);
+            const statusClass =
+                st === "active" ? "active-status" :
+                st === "banned" ? "banned-status" : "pending-status";
+
+            const tr = document.createElement("tr");
+
+            const userTd = document.createElement("td");
+            const nameDiv = document.createElement("div");
+            nameDiv.className = "user-name";
+            nameDiv.textContent = user.full_name || "—";
+            const emailDiv = document.createElement("div");
+            emailDiv.className = "user-email";
+            emailDiv.textContent = user.email || "";
+            userTd.appendChild(nameDiv);
+            userTd.appendChild(emailDiv);
+            tr.appendChild(userTd);
+
+            const mobileTd = document.createElement("td");
+            mobileTd.textContent = user.mobile || "—";
+            tr.appendChild(mobileTd);
+
+            const joinedTd = document.createElement("td");
+            joinedTd.textContent = formatDate(user.created_at);
+            tr.appendChild(joinedTd);
+
+            const statusTd = document.createElement("td");
+            const span = document.createElement("span");
+            span.className = "status " + statusClass;
+            span.textContent = label(user.status);
+            statusTd.appendChild(span);
+            tr.appendChild(statusTd);
+
+            const actionTd = document.createElement("td");
+            actionTd.appendChild(makeButton("View", "view-btn", () => viewUser(user)));
+            if (st === "banned") {
+                actionTd.appendChild(makeButton("Unban", "unban-btn", () => changeStatus(user, "active")));
+            } else {
+                actionTd.appendChild(makeButton("Ban", "ban-btn", () => changeStatus(user, "banned")));
+            }
+            tr.appendChild(actionTd);
+
+            table.appendChild(tr);
+        });
+    }
+
+    document.getElementById("totalCount").textContent = users.length;
+    document.getElementById("activeCount").textContent = users.filter(u => statusOf(u) === "active").length;
+    document.getElementById("bannedCount").textContent = users.filter(u => statusOf(u) === "banned").length;
+    document.getElementById("resultCount").textContent = filtered.length + " users shown";
+}
+
+async function loadUsers() {
+    const { data, error } = await db
+        .from("users")
+        .select("id, full_name, email, mobile, referral_code, referred_by, balance, status, created_at")
+        .order("created_at", { ascending: false })
+        .limit(1000);
+
+    if (error) {
+        showNote("Users load nahi hue: " + error.message, false);
+        return;
+    }
+
+    note.className = "note";
+    users = data || [];
+    renderUsers();
+}
+
+async function changeStatus(user, newStatus) {
+    const confirmed = confirm(
+        (user.full_name || user.email || "Is user") + " ka status " + newStatus + " karna hai?"
+    );
+    if (!confirmed) return;
+
+    const { data, error } = await db
+        .from("users")
+        .update({ status: newStatus })
+        .eq("id", user.id)
+        .select("id");
+
+    if (error) {
+        showNote("Status change nahi hua: " + error.message, false);
+    } else if (!data || data.length === 0) {
+        showNote("Status change nahi hua. Admin permission check karein.", false);
+    } else {
+        user.status = newStatus;
+        renderUsers();
+        showNote("Status " + newStatus + " kar diya gaya.", true);
+    }
+}
+
+function detailRow(labelText, value) {
+    const row = document.createElement("div");
+    row.className = "detail-row";
+    const strong = document.createElement("strong");
+    strong.textContent = labelText;
+    row.appendChild(strong);
+    row.appendChild(document.createTextNode(" " + value));
+    return row;
+}
+
+function viewUser(user) {
+    const box = document.getElementById("userDetails");
+    box.textContent = "";
+    box.appendChild(detailRow("ID:", user.id));
+    box.appendChild(detailRow("Name:", user.full_name || "—"));
+    box.appendChild(detailRow("Email:", user.email || "—"));
+    box.appendChild(detailRow("Mobile:", user.mobile || "—"));
+    box.appendChild(detailRow("Referral Code:", user.referral_code || "—"));
+    box.appendChild(detailRow("Referred By:", user.referred_by || "—"));
+    box.appendChild(detailRow("Balance:", user.balance ?? 0));
+    box.appendChild(detailRow("Joined:", formatDate(user.created_at)));
+    box.appendChild(detailRow("Status:", label(user.status)));
+    document.getElementById("userModal").style.display = "flex";
+}
+
+search.addEventListener("input", renderUsers);
+statusFilter.addEventListener("change", renderUsers);
+document.getElementById("refreshBtn").addEventListener("click", loadUsers);
+
+document.getElementById("closeModal").addEventListener("click", () => {
+    document.getElementById("userModal").style.display = "none";
+});
+
+document.getElementById("userModal").addEventListener("click", event => {
+    if (event.target.id === "userModal") {
+        event.currentTarget.style.display = "none";
+    }
+});
+
+document.getElementById("menuToggle").addEventListener("click", () => {
+    document.getElementById("sidebar").classList.toggle("show");
+});
+
+// ?status=active ya ?status=banned wale links ke liye
+const requestedStatus = new URLSearchParams(window.location.search).get("status");
+if (requestedStatus === "active" || requestedStatus === "banned") {
+    statusFilter.value = requestedStatus;
+}
+
+guard().then(ok => { if (ok) loadUsers(); });
+</script>
+
+</body>
+</html>

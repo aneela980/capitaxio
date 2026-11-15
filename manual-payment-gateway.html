@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manual Payment Gateway | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:#f4f6fc;color:#202943}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:250px;background:#151a35;color:white;padding:25px 15px;position:fixed;top:0;bottom:0;left:0;overflow-y:auto;z-index:10}
+.logo{font-size:23px;font-weight:bold;padding:0 12px 28px;color:#a99aff}
+.menu-title{color:#858ba9;font-size:11px;margin:20px 12px 10px;text-transform:uppercase;letter-spacing:1px}
+.sidebar a{display:block;color:#c4c9df;text-decoration:none;padding:12px;border-radius:8px;margin:4px 0;font-size:14px}
+.sidebar a:hover,.sidebar a.active{background:#7058dc;color:white}
+.main{margin-left:250px;width:calc(100% - 250px);padding:28px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:28px}
+.topbar h1{font-size:25px}
+.topbar p{color:#858ba1;font-size:13px;margin-top:7px}
+.admin-label{background:#e9e4ff;color:#6048c5;padding:10px 14px;border-radius:9px;font-size:13px;font-weight:bold}
+.notice{background:#fff7e5;color:#775516;border:1px solid #f2dfae;border-radius:9px;padding:14px;margin-bottom:22px;font-size:13px;line-height:1.6}
+.notice.error{background:#ffe5e8;color:#c6374b;border-color:#f3b9c1}
+.notice.success{background:#e0f8ed;color:#168354;border-color:#a9e6c6}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:25px}
+.stat-card,.panel,.gateway-card{background:white;border-radius:13px;padding:22px;box-shadow:0 4px 20px #1b28500a}
+.stat-card p{color:#858ba1;font-size:13px;margin-bottom:12px}
+.stat-card h2{font-size:25px}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.section-title{font-size:19px}
+.add-btn{background:#7058dc;color:white;border:none;border-radius:8px;padding:11px 15px;font-size:13px;font-weight:bold}
+.gateway-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.gateway-card{border:1px solid #eef0f6}
+.gateway-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+.gateway-icon{width:48px;height:48px;border-radius:12px;background:#eee9ff;color:#6249cf;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:bold;flex-shrink:0}
+.gateway-name{flex:1;min-width:0}
+.gateway-name h3{font-size:17px;margin-bottom:5px;overflow-wrap:anywhere}
+.gateway-name p{font-size:12px;color:#858ba1}
+.status{font-size:11px;font-weight:bold;padding:6px 9px;border-radius:20px}
+.enabled{background:#e0f8ed;color:#168354}
+.disabled{background:#edf0f6;color:#6f7890}
+.gateway-info{font-size:13px;color:#777f98;line-height:1.8;margin-bottom:17px;overflow-wrap:anywhere}
+.gateway-actions{display:flex;gap:9px;flex-wrap:wrap}
+button{cursor:pointer}
+button:disabled{opacity:.6;cursor:not-allowed}
+.btn{border:none;border-radius:7px;padding:10px 13px;font-size:12px;font-weight:bold}
+.edit-btn{background:#eae6ff;color:#6249cf}
+.toggle-btn{background:#e0f8ed;color:#168354}
+.off-btn{background:#edf0f6;color:#59637a}
+.empty{grid-column:1/-1;text-align:center;color:#858ba1;padding:30px;background:white;border-radius:13px}
+.menu-toggle{display:none;background:#7058dc;color:white;border:none;padding:10px 13px;border-radius:7px}
+.modal{display:none;position:fixed;inset:0;background:#10152dbb;z-index:30;justify-content:center;align-items:center;padding:18px}
+.modal-box{background:white;border-radius:14px;padding:25px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-box h2{margin-bottom:20px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;font-weight:bold;margin-bottom:7px}
+.field input,.field select,.field textarea{width:100%;padding:12px;border:1px solid #e0e4ef;border-radius:8px;outline:none;background:white;font-size:14px}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#7058dc}
+.field small{display:block;color:#858ba1;font-size:11px;margin-top:6px;line-height:1.5}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.save-btn{background:#7058dc;color:white;border:none;border-radius:8px;padding:11px 16px}
+.cancel-btn{background:#edf0f6;border:none;border-radius:8px;padding:11px 16px}
+.footer-note{margin-top:20px;color:#858ba1;font-size:12px;line-height:1.6}
+@media(max-width:1000px){.gateway-list{grid-template-columns:1fr}}
+@media(max-width:900px){
+.sidebar{transform:translateX(-100%);transition:.25s}
+.sidebar.show{transform:translateX(0)}
+.main{margin-left:0;width:100%;padding:18px}
+.menu-toggle{display:inline-block}
+.stats{grid-template-columns:1fr}
+}
+@media(max-width:500px){
+.topbar{align-items:flex-start;flex-wrap:wrap}
+.topbar h1{font-size:22px}
+.gateway-card,.panel,.stat-card{padding:16px}
+.gateway-top{flex-wrap:wrap}
+}
+</style>
+<script src="admin-embed.js"></script>
+</head>
+
+<body style="visibility:hidden">
+<div class="layout">
+
+<aside class="sidebar" id="sidebar">
+    <div class="logo">CAPITAXIO</div>
+    <div class="menu-title">Main Menu</div>
+    <a href="admin.html">Dashboard</a>
+    <a href="general-settings.html">General Setting</a>
+    <a href="manage-users.html">Manage Users</a>
+
+    <div class="menu-title">Payments</div>
+    <a href="deposits.html">Deposits</a>
+    <a href="withdrawals.html">Withdrawals</a>
+    <a href="payment-gateways.html" class="active">Payment Gateways</a>
+
+    <div class="menu-title">Settings</div>
+    <a href="system-configuration.html">System Configuration</a>
+    <a href="admin-login.html" id="logoutLink">Logout</a>
+</aside>
+
+<main class="main">
+    <header class="topbar">
+        <div>
+            <button class="menu-toggle" id="menuToggle">☰ Menu</button>
+            <h1 style="margin-top:12px">Manual Payment Gateway</h1>
+            <p>Manage available payment method settings.</p>
+        </div>
+        <div class="admin-label" id="adminName">ADMIN PANEL</div>
+    </header>
+
+    <div class="notice" id="notice">
+        <strong>Zaroori:</strong> Yahan jo account title aur number likhenge wahi user ko deposit page par nazar aayega. Ye cheez sahi likhna bohat zaroori hai, kyunke user isi account par paise bhejega. Kisi method ko enable karne se asli payment khud receive nahi hoti, aap ko deposit slip dekh kar khud approve karna hota hai.
+    </div>
+
+    <section class="stats">
+        <div class="stat-card">
+            <p>Total Methods</p>
+            <h2 id="totalCount">0</h2>
+        </div>
+        <div class="stat-card">
+            <p>Enabled Methods</p>
+            <h2 id="enabledCount">0</h2>
+        </div>
+        <div class="stat-card">
+            <p>Disabled Methods</p>
+            <h2 id="disabledCount">0</h2>
+        </div>
+    </section>
+
+    <section>
+        <div class="section-head">
+            <h2 class="section-title">Available Payment Methods</h2>
+            <button class="add-btn" id="addBtn" type="button">+ Add Method</button>
+        </div>
+        <div class="gateway-list" id="gatewayList"></div>
+    </section>
+
+    <p class="footer-note">
+        Note: Ye settings database mein save hoti hain. Kisi account ka password, PIN ya secret key yahan na likhein, sirf wo account number jis par user paise bheje.
+    </p>
+</main>
+</div>
+
+<div class="modal" id="editModal">
+    <div class="modal-box">
+        <h2 id="modalTitle">Edit Payment Method</h2>
+
+        <form id="gatewayForm">
+            <div class="field">
+                <label for="gatewayName">Method Name</label>
+                <input id="gatewayName" list="methodNames" required maxlength="50">
+                <datalist id="methodNames">
+                    <option value="JazzCash"></option>
+                    <option value="Easypaisa"></option>
+                    <option value="Bank Transfer"></option>
+                </datalist>
+                <small>User ke deposit page par ye teen naam nazar aate hain: JazzCash, Easypaisa, Bank Transfer. Isi spelling mein likhein.</small>
+            </div>
+
+            <div class="field">
+                <label for="gatewayType">Payment Type</label>
+                <select id="gatewayType" autocomplete="off">
+                    <option value="Manual">Manual Payment</option>
+                    <option value="Automatic">Automatic Gateway</option>
+                </select>
+                <small>Automatic gateway ke liye provider ki integration alag se karni hoti hai.</small>
+            </div>
+
+            <div class="field">
+                <label for="accountTitle">Account Title</label>
+                <input id="accountTitle" maxlength="100" placeholder="Account holder ka naam">
+            </div>
+
+            <div class="field">
+                <label for="accountNumber">Account Number / IBAN</label>
+                <input id="accountNumber" maxlength="60" placeholder="03XXXXXXXXX ya IBAN">
+            </div>
+
+            <div class="field">
+                <label for="instructions">Instructions (Optional)</label>
+                <textarea id="instructions" rows="2" maxlength="300" placeholder="Jaise: Bank ka naam, ya payment ke baad slip zaroor bhejein"></textarea>
+            </div>
+
+            <div class="field">
+                <label for="minimum">Minimum Deposit (Rs.)</label>
+                <input id="minimum" type="number" min="0" step="1" required>
+            </div>
+
+            <div class="field">
+                <label for="maximum">Maximum Deposit (Rs.)</label>
+                <input id="maximum" type="number" min="1" step="1" required>
+            </div>
+
+            <div class="field">
+                <label for="fee">Fee (%)</label>
+                <input id="fee" type="number" min="0" max="100" step="0.1" required>
+                <small>Ye sirf dikhane ke liye hai. Deposit approve karte waqt is se balance nahi katta.</small>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="cancel-btn" id="cancelBtn">Cancel</button>
+                <button type="submit" class="save-btn" id="saveBtn">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let gateways = [];
+let editingId = null;   // null = naya method
+
+const gatewayList = document.getElementById("gatewayList");
+const modal = document.getElementById("editModal");
+const notice = document.getElementById("notice");
+
+function showNotice(text, type) {
+    notice.textContent = text;
+    notice.className = "notice " + (type || "");
+}
+
+// Admin guard
+async function guard() {
+    const { data: s } = await db.auth.getSession();
+    if (!s.session) { window.location.replace("admin-login.html"); return false; }
+
+    const { data: a } = await db.from("admins").select("full_name")
+        .eq("user_id", s.session.user.id).eq("is_active", true).maybeSingle();
+
+    if (!a) {
+        await db.auth.signOut();
+        window.location.replace("admin-login.html");
+        return false;
+    }
+    document.getElementById("adminName").textContent = a.full_name || "ADMIN PANEL";
+    document.body.style.visibility = "visible";
+    return true;
+}
+
+function codeOf(name) {
+    return String(name || "").split(/\s+/).filter(Boolean).map(w => w[0]).join("").slice(0, 5).toUpperCase() || "PM";
+}
+
+function makeEl(tag, className, text) {
+    const el = document.createElement(tag);
+    if (className) el.className = className;
+    if (text !== undefined) el.textContent = text;
+    return el;
+}
+
+function renderGateways() {
+    gatewayList.textContent = "";
+
+    if (gateways.length === 0) {
+        gatewayList.appendChild(makeEl("div", "empty", "Abhi koi payment method nahi hai. \"+ Add Method\" dabayen."));
+    }
+
+    gateways.forEach(g => {
+        const card = makeEl("div", "gateway-card");
+
+        const top = makeEl("div", "gateway-top");
+        top.appendChild(makeEl("div", "gateway-icon", codeOf(g.method)));
+
+        const nameBox = makeEl("div", "gateway-name");
+        nameBox.appendChild(makeEl("h3", "", g.method));
+        nameBox.appendChild(makeEl("p", "", (g.pay_type || "Manual") + " Payment"));
+        top.appendChild(nameBox);
+
+        top.appendChild(makeEl("span", "status " + (g.is_active ? "enabled" : "disabled"), g.is_active ? "Enabled" : "Disabled"));
+        card.appendChild(top);
+
+        const info = makeEl("div", "gateway-info");
+        const lines = [
+            "Account: " + (g.account_title || "—"),
+            "Number: " + (g.account_number || "—"),
+            "Minimum: Rs. " + Number(g.min_amount || 0).toLocaleString("en-PK"),
+            "Maximum: Rs. " + Number(g.max_amount || 0).toLocaleString("en-PK"),
+            "Fee: " + Number(g.fee_percent || 0) + "%"
+        ];
+        lines.forEach((line, i) => {
+            if (i) info.appendChild(document.createElement("br"));
+            info.appendChild(document.createTextNode(line));
+        });
+        card.appendChild(info);
+
+        const actions = makeEl("div", "gateway-actions");
+
+        const edit = makeEl("button", "btn edit-btn", "Edit Settings");
+        edit.type = "button";
+        edit.addEventListener("click", () => editGateway(g.id));
+        actions.appendChild(edit);
+
+        const toggle = makeEl("button", "btn " + (g.is_active ? "off-btn" : "toggle-btn"), g.is_active ? "Disable" : "Enable");
+        toggle.type = "button";
+        toggle.addEventListener("click", () => toggleGateway(g, toggle));
+        actions.appendChild(toggle);
+
+        card.appendChild(actions);
+        gatewayList.appendChild(card);
+    });
+
+    document.getElementById("totalCount").textContent = gateways.length;
+    document.getElementById("enabledCount").textContent = gateways.filter(i => i.is_active).length;
+    document.getElementById("disabledCount").textContent = gateways.filter(i => !i.is_active).length;
+}
+
+async function loadGateways() {
+    const { data, error } = await db
+        .from("payment_accounts")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+    if (error) {
+        showNotice("Payment methods load nahi huay: " + error.message, "error");
+        return;
+    }
+
+    gateways = data || [];
+    renderGateways();
+}
+
+async function toggleGateway(g, button) {
+    const newState = !g.is_active;
+    if (!confirm((newState ? "Enable" : "Disable") + " " + g.method + "?")) return;
+
+    button.disabled = true;
+
+    const { data, error } = await db
+        .from("payment_accounts")
+        .update({ is_active: newState })
+        .eq("id", g.id)
+        .select("id");
+
+    if (error || !data || data.length === 0) {
+        button.disabled = false;
+        showNotice("Tabdeeli nahi hui: " + (error ? error.message : "admin permission check karein"), "error");
+        return;
+    }
+
+    showNotice(g.method + (newState ? " enable" : " disable") + " ho gaya.", "success");
+    await loadGateways();
+}
+
+function openModal(g) {
+    editingId = g ? g.id : null;
+    document.getElementById("modalTitle").textContent = g ? "Edit " + g.method : "Add Payment Method";
+    document.getElementById("gatewayName").value = g ? g.method : "";
+    document.getElementById("gatewayType").value = g ? (g.pay_type || "Manual") : "Manual";
+    document.getElementById("accountTitle").value = g ? (g.account_title || "") : "";
+    document.getElementById("accountNumber").value = g ? (g.account_number || "") : "";
+    document.getElementById("instructions").value = g ? (g.instructions || "") : "";
+    document.getElementById("minimum").value = g ? (g.min_amount ?? 0) : 500;
+    document.getElementById("maximum").value = g ? (g.max_amount ?? 100000) : 100000;
+    document.getElementById("fee").value = g ? (g.fee_percent ?? 0) : 0;
+    modal.style.display = "flex";
+}
+
+function editGateway(id) {
+    const g = gateways.find(item => item.id === id);
+    if (g) openModal(g);
+}
+
+function closeModal() {
+    modal.style.display = "none";
+    editingId = null;
+}
+
+document.getElementById("gatewayForm").addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const name = document.getElementById("gatewayName").value.trim();
+    const minimum = Number(document.getElementById("minimum").value);
+    const maximum = Number(document.getElementById("maximum").value);
+    const fee = Number(document.getElementById("fee").value);
+
+    if (!name || minimum < 0 || maximum <= 0 || maximum < minimum || fee < 0 || fee > 100) {
+        alert("Sahi settings likhein. Maximum, minimum se zyada ya barabar hona chahiye.");
+        return;
+    }
+
+    const payload = {
+        method: name,
+        pay_type: document.getElementById("gatewayType").value,
+        account_title: document.getElementById("accountTitle").value.trim() || null,
+        account_number: document.getElementById("accountNumber").value.trim() || null,
+        instructions: document.getElementById("instructions").value.trim() || null,
+        min_amount: minimum,
+        max_amount: maximum,
+        fee_percent: fee
+    };
+
+    const saveBtn = document.getElementById("saveBtn");
+    saveBtn.disabled = true;
+
+    let result;
+    if (editingId) {
+        result = await db.from("payment_accounts").update(payload).eq("id", editingId).select("id");
+    } else {
+        result = await db.from("payment_accounts").insert({ ...payload, is_active: true }).select("id");
+    }
+
+    saveBtn.disabled = false;
+
+    if (result.error || !result.data || result.data.length === 0) {
+        alert("Save nahi hua: " + (result.error ? result.error.message : "admin permission check karein"));
+        return;
+    }
+
+    closeModal();
+    showNotice("Payment method save ho gaya.", "success");
+    await loadGateways();
+});
+
+document.getElementById("addBtn").addEventListener("click", () => openModal(null));
+document.getElementById("cancelBtn").addEventListener("click", closeModal);
+
+modal.addEventListener("click", event => {
+    if (event.target === modal) closeModal();
+});
+
+document.getElementById("menuToggle").addEventListener("click", () => {
+    document.getElementById("sidebar").classList.toggle("show");
+});
+
+document.getElementById("logoutLink").addEventListener("click", async event => {
+    event.preventDefault();
+    await db.auth.signOut();
+    window.location.href = "admin-login.html";
+});
+
+guard().then(ok => { if (ok) loadGateways(); });
+</script>
+</body>
+</html>

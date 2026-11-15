@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Withdrawal Methods | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "description": "Kaun se tareeqon se user withdrawal le sakta hai, aur har tareeqe ki hadd. Database khud ye hadd lagu karta hai.",
+ "table": "withdrawal_methods",
+ "orderBy": "created_at",
+ "ascending": true,
+ "columns": [
+  {
+   "key": "method",
+   "label": "Method",
+   "type": "text"
+  },
+  {
+   "key": "min_amount",
+   "label": "Minimum",
+   "type": "money"
+  },
+  {
+   "key": "max_amount",
+   "label": "Maximum",
+   "type": "money"
+  },
+  {
+   "key": "fee_percent",
+   "label": "Fee %",
+   "type": "text"
+  },
+  {
+   "key": "is_active",
+   "label": "Active",
+   "type": "bool"
+  }
+ ],
+ "form": [
+  {
+   "key": "method",
+   "label": "Method ka naam",
+   "type": "text",
+   "required": true,
+   "maxlength": 50,
+   "help": "JazzCash, Easypaisa ya Bank Transfer, isi spelling mein."
+  },
+  {
+   "key": "min_amount",
+   "label": "Minimum (Rs.)",
+   "type": "number",
+   "min": 0
+  },
+  {
+   "key": "max_amount",
+   "label": "Maximum (Rs.)",
+   "type": "number",
+   "min": 1
+  },
+  {
+   "key": "fee_percent",
+   "label": "Fee % (sirf dikhane ke liye)",
+   "type": "number",
+   "min": 0
+  },
+  {
+   "key": "is_active",
+   "label": "Active",
+   "type": "checkbox",
+   "default": true
+  }
+ ],
+ "canAdd": true,
+ "canEdit": true,
+ "canDelete": true,
+ "toggleKey": "is_active",
+ "searchKeys": [
+  "method"
+ ],
+ "addLabel": "+ Add Method",
+ "title": "Withdrawal Methods"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

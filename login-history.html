@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login History | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "description": "Users ke login ka record (kaun, kab, kis device se).",
+ "table": "login_history",
+ "orderBy": "created_at",
+ "columns": [
+  {
+   "key": "email",
+   "label": "Email",
+   "type": "text"
+  },
+  {
+   "key": "user_agent",
+   "label": "Device / Browser",
+   "type": "text"
+  },
+  {
+   "key": "created_at",
+   "label": "Time",
+   "type": "datetime"
+  }
+ ],
+ "searchKeys": [
+  "email",
+  "user_agent"
+ ],
+ "title": "Login History"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Users With Balance | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "title": "Users With Balance",
+ "description": "Wo users jin ke account mein balance maujood hai.",
+ "table": "users",
+ "orderBy": "balance",
+ "ascending": false,
+ "where": [
+  {
+   "op": "gt",
+   "col": "balance",
+   "val": 0
+  }
+ ],
+ "columns": [
+  {
+   "key": "full_name",
+   "label": "Name",
+   "type": "text"
+  },
+  {
+   "key": "email",
+   "label": "Email",
+   "type": "text"
+  },
+  {
+   "key": "mobile",
+   "label": "Mobile",
+   "type": "text"
+  },
+  {
+   "key": "balance",
+   "label": "Balance",
+   "type": "money"
+  },
+  {
+   "key": "status",
+   "label": "Status",
+   "type": "badge"
+  }
+ ],
+ "searchKeys": [
+  "full_name",
+  "email",
+  "mobile"
+ ]
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

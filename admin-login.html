@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio - Admin Login</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root { --navy: #09164b; --purple: #4935ff; --text: #e4e9f8; --muted: #9ba8c9; }
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+
+body { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+    background: radial-gradient(circle at top left, #20256c 0, transparent 40%), radial-gradient(circle at bottom right, #27205b 0, transparent 35%), #080d20;
+    color: var(--text); }
+
+.login-container { width: 100%; max-width: 430px; }
+.brand { text-align: center; margin-bottom: 25px; }
+.logo { width: 68px; height: 68px; display: grid; place-items: center; margin: 0 auto 14px; border-radius: 18px; background: var(--purple); box-shadow: 0 8px 30px #4935ff55; color: white; font-size: 34px; font-weight: bold; }
+.brand h1 { font-size: 25px; color: white; letter-spacing: 1px; }
+.brand h1 span { color: #a59bff; }
+.brand p { color: var(--muted); font-size: 13px; margin-top: 8px; }
+
+.login-card { background: #101a3a; border: 1px solid #29365f; border-radius: 18px; padding: 30px; box-shadow: 0 20px 60px #0005; }
+.login-card h2 { font-size: 23px; color: white; margin-bottom: 8px; }
+.description { color: var(--muted); font-size: 13px; line-height: 1.6; margin-bottom: 25px; }
+
+.form-group { margin-bottom: 19px; }
+label { display: block; font-size: 13px; color: #dce3f7; margin-bottom: 9px; }
+.input-wrap { position: relative; }
+
+input { width: 100%; padding: 14px; padding-right: 58px; border: 1px solid #35436d; border-radius: 9px; background: #0a1330; color: white; outline: none; font-size: 14px; }
+input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px #4935ff20; }
+input::placeholder { color: #7583a8; }
+
+.show-password { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #aaa4ff; cursor: pointer; font-size: 12px; padding: 6px; }
+
+.login-options { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 3px 0 22px; font-size: 12px; }
+.remember { display: flex; align-items: center; gap: 7px; color: var(--muted); }
+.remember input { width: 15px; height: 15px; accent-color: var(--purple); }
+.forgot-link { color: #b0a8ff; text-decoration: none; }
+.forgot-link:hover { text-decoration: underline; }
+
+.login-btn { width: 100%; padding: 14px; border: none; border-radius: 9px; background: var(--purple); color: white; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
+.login-btn:hover { background: #3826e8; transform: translateY(-1px); }
+.login-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.message { display: none; padding: 12px; border-radius: 8px; font-size: 13px; line-height: 1.5; margin-bottom: 17px; }
+.message.error { display: block; color: #ffb8b8; background: #471d2b; border: 1px solid #713044; }
+.message.success { display: block; color: #a9f3c2; background: #123b2a; border: 1px solid #226b46; }
+
+.security-note { text-align: center; color: #8492b4; font-size: 11px; line-height: 1.7; margin-top: 22px; }
+.back-link { display: block; text-align: center; color: #aaa4ff; text-decoration: none; font-size: 13px; margin-top: 20px; }
+.back-link:hover { text-decoration: underline; }
+
+@media (max-width: 480px) {
+    .login-card { padding: 23px 19px; }
+    .brand h1 { font-size: 22px; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="login-container">
+
+    <div class="brand">
+        <div class="logo">C</div>
+        <h1>CAPITAXIO <span>ADMIN</span></h1>
+        <p>Administration Portal</p>
+    </div>
+
+    <div class="login-card">
+        <h2>Admin Login</h2>
+        <p class="description">
+            Sign in with your authorized administrator account to continue.
+        </p>
+
+        <div id="message" class="message" role="status" aria-live="polite"></div>
+
+        <form id="adminLoginForm">
+            <div class="form-group">
+                <label for="email">Admin Email</label>
+                <div class="input-wrap">
+                    <input type="email" id="email" placeholder="Enter your admin email" autocomplete="username" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-wrap">
+                    <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" required>
+                    <button type="button" class="show-password" id="togglePassword">Show</button>
+                </div>
+            </div>
+
+            <div class="login-options">
+                <label class="remember">
+                    <input type="checkbox" id="remember">
+                    Remember email
+                </label>
+
+                <a href="forgot-password.html" class="forgot-link">
+                    Forgot password?
+                </a>
+            </div>
+
+            <button type="submit" class="login-btn" id="loginBtn">
+                Sign In to Admin Panel
+            </button>
+        </form>
+
+        <p class="security-note">
+            🔒 Authorized administrators only.<br>
+            Is page ko kholne par purana login khud ba khud logout ho jata hai.
+        </p>
+    </div>
+
+    <a href="index.html" class="back-link">← Back to User Login</a>
+
+</div>
+
+<script>
+const SUPABASE_URL = "https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const form = document.getElementById("adminLoginForm");
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const togglePassword = document.getElementById("togglePassword");
+const message = document.getElementById("message");
+const loginBtn = document.getElementById("loginBtn");
+const remember = document.getElementById("remember");
+
+function showMessage(text, type) {
+    message.textContent = text;
+    message.className = "message " + type;
+}
+
+// Is page par aate hi purana session khatam (Logout links yahin aate hain)
+db.auth.signOut();
+
+// Yaad rakhi hui email wapas bharna
+try {
+    const savedEmail = localStorage.getItem("capitaxio_admin_email");
+    if (savedEmail) {
+        emailInput.value = savedEmail;
+        remember.checked = true;
+    }
+} catch (e) {}
+
+togglePassword.addEventListener("click", function () {
+    const hidden = passwordInput.type === "password";
+    passwordInput.type = hidden ? "text" : "password";
+    togglePassword.textContent = hidden ? "Hide" : "Show";
+});
+
+remember.addEventListener("change", function () {
+    if (!remember.checked) {
+        emailInput.removeAttribute("autocomplete");
+        try { localStorage.removeItem("capitaxio_admin_email"); } catch (e) {}
+    } else {
+        emailInput.setAttribute("autocomplete", "username");
+    }
+});
+
+form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!email || !password) {
+        showMessage("Please enter your email and password.", "error");
+        return;
+    }
+
+    loginBtn.disabled = true;
+    loginBtn.textContent = "Signing in...";
+
+    // 1) Supabase Auth se login
+    const { data, error } = await db.auth.signInWithPassword({ email, password });
+
+    if (error || !data.user) {
+        showMessage("Email ya password ghalat hai.", "error");
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Sign In to Admin Panel";
+        return;
+    }
+
+    // 2) Check karein ke ye user admins table mein active admin hai
+    const { data: adminRow, error: adminError } = await db
+        .from("admins")
+        .select("id, full_name, role, is_active")
+        .eq("user_id", data.user.id)
+        .eq("is_active", true)
+        .maybeSingle();
+
+    if (adminError || !adminRow) {
+        await db.auth.signOut();
+        showMessage("Ye account admin panel ke liye authorized nahi hai.", "error");
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Sign In to Admin Panel";
+        return;
+    }
+
+    try {
+        if (remember.checked) {
+            localStorage.setItem("capitaxio_admin_email", email);
+        } else {
+            localStorage.removeItem("capitaxio_admin_email");
+        }
+    } catch (e) {}
+
+    showMessage("Login kamyab. Dashboard khul raha hai...", "success");
+    window.location.href = "admin.html";
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio | Maintenance Settings</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#081326;color:#eef4ff;padding:22px}
+.container{max-width:1000px;margin:auto}
+.header{background:#102b68;padding:25px;border-radius:12px;margin-bottom:22px}
+.header h1{font-size:25px;margin-bottom:8px}
+.header p{color:#c7d8f5}
+.panel{background:#13213a;border:1px solid #263b5e;padding:24px;border-radius:12px;margin-bottom:20px}
+h2{font-size:19px;margin-bottom:18px}
+label{display:block;margin:16px 0 8px;color:#c7d8f5;font-size:14px}
+input,textarea{width:100%;padding:13px;background:#081326;color:white;border:1px solid #344b70;border-radius:7px;outline:none}
+textarea{min-height:120px;resize:vertical}
+button{border:0;padding:12px 20px;border-radius:7px;cursor:pointer;font-weight:bold;margin-top:18px}
+.save{background:#17bce8;color:#061426}
+.refresh{background:#526b91;color:white;margin-left:8px}
+.switch-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:20px 0}
+.switch-row input{width:20px;height:20px;accent-color:#17bce8}
+.status{padding:12px;border-radius:8px;background:#173b32;color:#7df0b6;display:inline-block;margin-top:12px}
+.off{background:#4a3440;color:#ffb0bd}
+#message{margin-top:15px;color:#a9c0df;white-space:pre-wrap}
+.note{margin-top:18px;padding:13px;background:#0c1a30;border-radius:8px;color:#9eb4d5;font-size:13px}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+<h1>Maintenance Mode</h1>
+<p>Control your Capitaxio website maintenance settings.</p>
+</div>
+
+<div class="panel">
+<h2>Website Maintenance Settings</h2>
+
+<div class="switch-row">
+<input type="checkbox" id="maintenanceMode">
+<label for="maintenanceMode" style="margin:0">Enable Maintenance Mode</label>
+</div>
+
+<div id="currentStatus" class="status">Checking status...</div>
+
+<label for="maintenanceTitle">Maintenance Title</label>
+<input type="text" id="maintenanceTitle" placeholder="Website Under Maintenance">
+
+<label for="maintenanceMessage">Maintenance Message</label>
+<textarea id="maintenanceMessage" placeholder="We are currently improving our website. Please visit again soon."></textarea>
+
+<button class="save" onclick="saveSettings()">Save Settings</button>
+<button class="refresh" onclick="loadSettings()">Refresh</button>
+
+<p id="message">Checking admin login...</p>
+
+<div class="note">
+Changes are saved in Supabase. Your website's public pages must also read this setting and display the maintenance screen when maintenance mode is enabled.
+</div>
+</div>
+
+</div>
+
+<script>
+const SUPABASE_URL="https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY="sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+let adminSession=null;
+
+const message=document.getElementById("message");
+const mode=document.getElementById("maintenanceMode");
+const title=document.getElementById("maintenanceTitle");
+const description=document.getElementById("maintenanceMessage");
+const statusBox=document.getElementById("currentStatus");
+
+function showStatus(){
+ if(mode.checked){
+  statusBox.textContent="Maintenance Mode: ON";
+  statusBox.className="status off";
+ }else{
+  statusBox.textContent="Maintenance Mode: OFF";
+  statusBox.className="status";
+ }
+}
+
+mode.addEventListener("change",showStatus);
+
+async function checkLogin(){
+ const {data,error}=await db.auth.getSession();
+
+ if(error || !data.session){
+  adminSession=null;
+  message.textContent="Please login through your Supabase-connected admin login.";
+  return false;
+ }
+
+ adminSession=data.session;
+ return true;
+}
+
+async function loadSettings(){
+ message.textContent="Loading settings...";
+
+ if(!(await checkLogin()))return;
+
+ const {data,error}=await db
+  .from("maintenance_settings")
+  .select("*")
+  .eq("id",1)
+  .maybeSingle();
+
+ if(error){
+  message.textContent="Database error: "+error.message;
+  return;
+ }
+
+ if(!data){
+  mode.checked=false;
+  title.value="Website Under Maintenance";
+  description.value="We are currently improving our website. Please visit again soon.";
+  showStatus();
+  message.textContent="No settings saved yet. Set your preferences and click Save Settings.";
+  return;
+ }
+
+ mode.checked=!!data.maintenance_mode;
+ title.value=data.maintenance_title||"";
+ description.value=data.maintenance_message||"";
+ showStatus();
+ message.textContent="Maintenance settings loaded successfully.";
+}
+
+async function saveSettings(){
+ if(!(await checkLogin()))return;
+
+ const record={
+  id:1,
+  maintenance_mode:mode.checked,
+  maintenance_title:title.value.trim(),
+  maintenance_message:description.value.trim(),
+  updated_at:new Date().toISOString()
+ };
+
+ message.textContent="Saving settings...";
+
+ const {error}=await db
+  .from("maintenance_settings")
+  .upsert(record,{onConflict:"id"});
+
+ if(error){
+  message.textContent="Save failed: "+error.message;
+  return;
+ }
+
+ showStatus();
+ message.textContent="Settings saved successfully!";
+}
+
+loadSettings();
+</script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat Settings | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "table": "site_settings",
+ "mode": "single",
+ "idKey": "id",
+ "idValue": 1,
+ "description": "Chat ki setting. Link sirf https:// wala hona chahiye.",
+ "form": [
+  {
+   "key": "chat_enabled",
+   "label": "Chat on rakhein",
+   "type": "checkbox"
+  },
+  {
+   "key": "chat_link",
+   "label": "Chat ka link",
+   "type": "url",
+   "maxlength": 300,
+   "placeholder": "https://wa.me/923001234567"
+  },
+  {
+   "key": "chat_welcome",
+   "label": "Khair-maqdam ka paigham",
+   "type": "textarea",
+   "maxlength": 300
+  }
+ ],
+ "title": "Chat Settings"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

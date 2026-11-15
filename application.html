@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Application | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "table": "site_settings",
+ "mode": "single",
+ "idKey": "id",
+ "idValue": 1,
+ "title": "Application",
+ "description": "Mobile app ki download ki maloomat. Yahan link likhne se user ke App Download page par button khud chal jata hai.",
+ "form": [
+  {
+   "key": "app_download_url",
+   "label": "App Download Link",
+   "type": "url",
+   "maxlength": 300,
+   "placeholder": "https://...",
+   "help": "Sirf https:// wala link."
+  },
+  {
+   "key": "app_version",
+   "label": "App Version",
+   "type": "text",
+   "maxlength": 30
+  }
+ ]
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

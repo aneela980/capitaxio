@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pending Withdrawals | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:#f4f6fc;color:#202943}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:250px;background:#151a35;color:white;padding:25px 15px;position:fixed;top:0;bottom:0;left:0;overflow-y:auto;z-index:10}
+.logo{font-size:23px;font-weight:bold;padding:0 12px 28px;color:#a99aff}
+.menu-title{color:#858ba9;font-size:11px;margin:20px 12px 10px;text-transform:uppercase;letter-spacing:1px}
+.sidebar a{display:block;color:#c4c9df;text-decoration:none;padding:12px;border-radius:8px;margin:4px 0;font-size:14px}
+.sidebar a:hover,.sidebar a.active{background:#7058dc;color:white}
+.main{margin-left:250px;width:calc(100% - 250px);padding:28px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:28px}
+.topbar h1{font-size:25px}
+.topbar p{color:#858ba1;font-size:13px;margin-top:7px}
+.admin-label{background:#e9e4ff;color:#6048c5;padding:10px 14px;border-radius:9px;font-size:13px;font-weight:bold}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:25px}
+.stat-card,.panel{background:white;border-radius:13px;padding:22px;box-shadow:0 4px 20px #1b28500a}
+.stat-card p{color:#858ba1;font-size:13px;margin-bottom:12px}
+.stat-card h2{font-size:25px;overflow-wrap:anywhere}
+.panel-heading{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:20px}
+.panel-heading h2{font-size:19px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+input,select{padding:11px 13px;border:1px solid #e0e4ef;border-radius:8px;outline:none;background:white;color:#202943}
+input:focus,select:focus{border-color:#7058dc}
+#search{flex:1;min-width:180px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:900px}
+th{background:#f7f8fc;color:#777f98;font-size:12px;text-align:left;padding:15px 12px}
+td{padding:15px 12px;border-bottom:1px solid #eef0f6;font-size:13px}
+.user-name{font-weight:bold}
+.subtext{color:#858ba1;font-size:12px;margin-top:5px}
+.status{padding:6px 9px;border-radius:20px;font-size:11px;font-weight:bold;display:inline-block}
+.pending{background:#fff2d7;color:#9b6a08}
+.approved{background:#e0f8ed;color:#168354}
+.rejected{background:#ffe5e8;color:#c6374b}
+.action-btn{border:none;padding:8px 10px;border-radius:6px;cursor:pointer;font-size:12px;margin:2px}
+.action-btn:disabled{opacity:.5;cursor:not-allowed}
+.view-btn{background:#eae6ff;color:#6249cf}
+.approve-btn{background:#e0f8ed;color:#168354}
+.reject-btn{background:#ffe5e8;color:#c6374b}
+.empty{text-align:center;padding:30px;color:#858ba1}
+.pagination{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px;color:#858ba1;font-size:13px}
+.primary-btn{background:#7058dc;color:white;border:none;border-radius:8px;padding:11px 15px;cursor:pointer}
+.menu-toggle{display:none;background:#7058dc;color:white;border:none;padding:10px 13px;border-radius:7px;cursor:pointer}
+.notice{background:#fff7e5;color:#775516;border:1px solid #f2dfae;border-radius:9px;padding:13px 15px;margin-bottom:20px;font-size:13px;line-height:1.5}
+.notice.error{background:#ffe5e8;color:#c6374b;border-color:#f3b9c1}
+.notice.success{background:#e0f8ed;color:#168354;border-color:#a9e6c6}
+.modal{display:none;position:fixed;inset:0;background:#10152dbb;z-index:30;justify-content:center;align-items:center;padding:18px}
+.modal-box{background:white;border-radius:14px;padding:25px;width:100%;max-width:460px}
+.modal-box h2{margin-bottom:18px}
+.detail-row{padding:12px 0;border-bottom:1px solid #edf0f6;font-size:14px;overflow-wrap:anywhere}
+.detail-row strong{display:inline-block;width:125px}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.secondary-btn{background:#edf0f6;border:none;border-radius:8px;padding:11px 15px;cursor:pointer}
+@media(max-width:900px){
+.sidebar{transform:translateX(-100%);transition:.25s}
+.sidebar.show{transform:translateX(0)}
+.main{margin-left:0;width:100%;padding:18px}
+.menu-toggle{display:inline-block}
+.stats{grid-template-columns:1fr}
+}
+@media(max-width:500px){
+.topbar{align-items:flex-start;flex-wrap:wrap}
+.topbar h1{font-size:22px}
+.panel{padding:15px}
+}
+</style>
+<script src="admin-embed.js"></script>
+</head>
+
+<body style="visibility:hidden">
+<div class="layout">
+
+<aside class="sidebar" id="sidebar">
+    <div class="logo">CAPITAXIO</div>
+
+    <div class="menu-title">Main Menu</div>
+    <a href="admin.html">Dashboard</a>
+    <a href="general-settings.html">General Setting</a>
+    <a href="manage-users.html">Manage Users</a>
+
+    <div class="menu-title">Deposits</div>
+    <a href="deposits.html">All Deposits</a>
+
+    <div class="menu-title">Withdrawals</div>
+    <a href="withdrawals.html" class="active">All Withdrawals</a>
+    <a href="withdrawals.html?status=Pending">Pending Withdrawals</a>
+    <a href="withdrawals.html?status=Approved">Approved Withdrawals</a>
+    <a href="withdrawals.html?status=Rejected">Rejected Withdrawals</a>
+
+    <div class="menu-title">Settings</div>
+    <a href="payment-gateways.html">Payment Gateways</a>
+    <a href="system-configuration.html">System Configuration</a>
+    <a href="admin-login.html" id="logoutLink">Logout</a>
+</aside>
+
+<main class="main">
+    <header class="topbar">
+        <div>
+            <button class="menu-toggle" id="menuToggle">☰ Menu</button>
+            <h1 style="margin-top:12px">Pending Withdrawals</h1>
+            <p>Wo requests jin ka faisla abhi baqi hai. Approve karne par user ka balance kat jata hai.</p>
+        </div>
+        <div class="admin-label">ADMIN PANEL</div>
+    </header>
+
+    <div class="notice" id="notice">
+        <strong>Zaroori:</strong> Approve karne par user ka balance database mein khud kam ho jata hai. Is page se asli payment transfer nahi hoti, wo aap ko khud bhejni hogi.
+    </div>
+
+    <section class="stats">
+        <div class="stat-card">
+            <p>Total Requests</p>
+            <h2 id="totalCount">0</h2>
+        </div>
+        <div class="stat-card">
+            <p>Pending Requests</p>
+            <h2 id="pendingCount">0</h2>
+        </div>
+        <div class="stat-card">
+            <p>Approved Amount</p>
+            <h2 id="approvedAmount">Rs. 0</h2>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-heading">
+            <h2>All Withdrawal Requests</h2>
+        </div>
+
+        <div class="controls">
+            <input type="search" id="search" placeholder="Search ID, name or method...">
+            <select id="statusFilter">
+                <option value="all">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+            </select>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>REQUEST ID</th>
+                        <th>USER</th>
+                        <th>METHOD</th>
+                        <th>AMOUNT</th>
+                        <th>DATE</th>
+                        <th>STATUS</th>
+                        <th>ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody id="withdrawalsTable"></tbody>
+            </table>
+        </div>
+
+        <div class="pagination">
+            <span id="resultCount">0 requests</span>
+            <button class="primary-btn" id="refreshBtn">↻ Refresh</button>
+        </div>
+    </section>
+</main>
+</div>
+
+<div class="modal" id="withdrawalModal">
+    <div class="modal-box">
+        <h2>Withdrawal Details</h2>
+        <div id="withdrawalDetails"></div>
+        <div class="modal-actions">
+            <button class="secondary-btn" id="closeModal">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let withdrawals = [];
+let userMap = {};
+
+const table = document.getElementById("withdrawalsTable");
+const search = document.getElementById("search");
+const statusFilter = document.getElementById("statusFilter");
+const notice = document.getElementById("notice");
+
+function showNotice(text, type) {
+    notice.textContent = text;
+    notice.className = "notice " + (type || "");
+}
+
+// Admin guard
+async function guard() {
+    const { data: s } = await db.auth.getSession();
+    if (!s.session) { window.location.replace("admin-login.html"); return false; }
+
+    const { data: a } = await db.from("admins").select("id")
+        .eq("user_id", s.session.user.id).eq("is_active", true).maybeSingle();
+
+    if (!a) {
+        await db.auth.signOut();
+        window.location.replace("admin-login.html");
+        return false;
+    }
+    document.body.style.visibility = "visible";
+    return true;
+}
+
+function money(amount) {
+    return "Rs. " + Number(amount || 0).toLocaleString("en-PK");
+}
+
+function stOf(item) {
+    return String(item.status || "").toLowerCase();
+}
+
+function label(value) {
+    const t = String(value || "");
+    return t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : "—";
+}
+
+function shortId(id) {
+    return String(id).length > 8 ? String(id).slice(0, 8).toUpperCase() : String(id);
+}
+
+function formatDate(value) {
+    if (!value) return "";
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
+}
+
+function methodOf(item) {
+    return item.payment_method || item.method || "—";
+}
+
+function userOf(item) {
+    return userMap[String(item.user_id)] || {};
+}
+
+function makeCell(tr, child) {
+    const td = document.createElement("td");
+    if (typeof child === "string") td.textContent = child;
+    else td.appendChild(child);
+    tr.appendChild(td);
+    return td;
+}
+
+function makeButton(text, className, handler) {
+    const b = document.createElement("button");
+    b.className = "action-btn " + className;
+    b.textContent = text;
+    b.addEventListener("click", () => handler(b));
+    return b;
+}
+
+function renderWithdrawals() {
+    const term = search.value.toLowerCase().trim();
+    const selected = statusFilter.value;
+
+    const filtered = withdrawals.filter(item => {
+        const u = userOf(item);
+        const text = [item.id, u.full_name, u.email, methodOf(item)].join(" ").toLowerCase();
+        return text.includes(term) && (selected === "all" || stOf(item) === selected);
+    });
+
+    table.textContent = "";
+
+    if (filtered.length === 0) {
+        const tr = document.createElement("tr");
+        const td = makeCell(tr, "No withdrawal requests found.");
+        td.colSpan = 7;
+        td.className = "empty";
+        table.appendChild(tr);
+    } else {
+        filtered.forEach(item => {
+            const u = userOf(item);
+            const tr = document.createElement("tr");
+
+            const strong = document.createElement("strong");
+            strong.textContent = shortId(item.id);
+            makeCell(tr, strong);
+
+            const userDiv = document.createElement("div");
+            const n = document.createElement("div");
+            n.className = "user-name";
+            n.textContent = u.full_name || "Unknown user";
+            const e = document.createElement("div");
+            e.className = "subtext";
+            e.textContent = u.email || "";
+            userDiv.appendChild(n);
+            userDiv.appendChild(e);
+            makeCell(tr, userDiv);
+
+            makeCell(tr, methodOf(item));
+
+            const amt = document.createElement("strong");
+            amt.textContent = money(item.amount);
+            makeCell(tr, amt);
+
+            makeCell(tr, formatDate(item.created_at));
+
+            const span = document.createElement("span");
+            span.className = "status " + stOf(item);
+            span.textContent = label(item.status);
+            makeCell(tr, span);
+
+            const actions = document.createElement("div");
+            actions.appendChild(makeButton("View", "view-btn", () => viewWithdrawal(item)));
+            if (stOf(item) === "pending") {
+                actions.appendChild(makeButton("Approve", "approve-btn", b => processRequest(item, "approve", b)));
+                actions.appendChild(makeButton("Reject", "reject-btn", b => processRequest(item, "reject", b)));
+            }
+            makeCell(tr, actions);
+
+            table.appendChild(tr);
+        });
+    }
+
+    document.getElementById("totalCount").textContent = withdrawals.length;
+    document.getElementById("pendingCount").textContent =
+        withdrawals.filter(i => stOf(i) === "pending").length;
+
+    const approvedTotal = withdrawals
+        .filter(i => stOf(i) === "approved")
+        .reduce((sum, i) => sum + Number(i.amount || 0), 0);
+
+    document.getElementById("approvedAmount").textContent = money(approvedTotal);
+    document.getElementById("resultCount").textContent = filtered.length + " requests shown";
+}
+
+async function loadUsersFor(items) {
+    userMap = {};
+    const ids = [...new Set(items.map(i => i.user_id).filter(Boolean))];
+    if (ids.length === 0) return;
+
+    const cols = "id, auth_user_id, full_name, email, mobile, balance";
+
+    // user_id kabhi users.id hota hai, kabhi login id; dono tareeqe try karte hain
+    const [byId, byAuth] = await Promise.all([
+        db.from("users").select(cols).in("id", ids),
+        db.from("users").select(cols).in("auth_user_id", ids)
+    ]);
+
+    [byId.data, byAuth.data].forEach(list => {
+        (list || []).forEach(u => {
+            userMap[String(u.id)] = u;
+            if (u.auth_user_id) userMap[String(u.auth_user_id)] = u;
+        });
+    });
+}
+
+async function loadWithdrawals() {
+    const { data, error } = await db
+        .from("withdrawals")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(1000);
+
+    if (error) {
+        showNotice("Withdrawals load nahi hui: " + error.message, "error");
+        return;
+    }
+
+    withdrawals = data || [];
+    await loadUsersFor(withdrawals);
+    renderWithdrawals();
+}
+
+async function processRequest(item, action, button) {
+    const u = userOf(item);
+    const verb = action === "approve" ? "approve" : "reject";
+    const ok = confirm(
+        (u.full_name || "Is user") + " ki " + money(item.amount) + " ki request " + verb + " karni hai?" +
+        (action === "approve" ? "\n\nUser ka balance isi waqt kam ho jayega." : "")
+    );
+    if (!ok) return;
+
+    button.disabled = true;
+
+    const { data, error } = await db.rpc("process_withdrawal", {
+        p_id: String(item.id),
+        p_action: action
+    });
+
+    if (error) {
+        button.disabled = false;
+        showNotice("Nahi hua: " + error.message, "error");
+        return;
+    }
+
+    showNotice("Request " + data + " ho gayi.", "success");
+    await loadWithdrawals();
+}
+
+function detailRow(name, value) {
+    const row = document.createElement("div");
+    row.className = "detail-row";
+    const s = document.createElement("strong");
+    s.textContent = name;
+    row.appendChild(s);
+    row.appendChild(document.createTextNode(" " + value));
+    return row;
+}
+
+function viewWithdrawal(item) {
+    const u = userOf(item);
+    const box = document.getElementById("withdrawalDetails");
+    box.textContent = "";
+    box.appendChild(detailRow("Request ID:", item.id));
+    box.appendChild(detailRow("User:", u.full_name || "—"));
+    box.appendChild(detailRow("Email:", u.email || "—"));
+    box.appendChild(detailRow("Mobile:", u.mobile || "—"));
+    box.appendChild(detailRow("User Balance:", money(u.balance)));
+    box.appendChild(detailRow("Method:", methodOf(item)));
+    box.appendChild(detailRow("Account Title:", item.account_title || "—"));
+    box.appendChild(detailRow("Bank:", item.bank_name || "—"));
+    box.appendChild(detailRow("Account No:", item.account_number || "—"));
+    if (item.note) box.appendChild(detailRow("User Note:", item.note));
+    box.appendChild(detailRow("Amount:", money(item.amount)));
+    box.appendChild(detailRow("Date:", formatDate(item.created_at)));
+    box.appendChild(detailRow("Status:", label(item.status)));
+    if (item.reviewed_at) box.appendChild(detailRow("Reviewed:", formatDate(item.reviewed_at)));
+    document.getElementById("withdrawalModal").style.display = "flex";
+}
+
+search.addEventListener("input", renderWithdrawals);
+statusFilter.addEventListener("change", renderWithdrawals);
+document.getElementById("refreshBtn").addEventListener("click", loadWithdrawals);
+
+document.getElementById("closeModal").addEventListener("click", () => {
+    document.getElementById("withdrawalModal").style.display = "none";
+});
+
+document.getElementById("withdrawalModal").addEventListener("click", event => {
+    if (event.target.id === "withdrawalModal") {
+        event.currentTarget.style.display = "none";
+    }
+});
+
+document.getElementById("menuToggle").addEventListener("click", () => {
+    document.getElementById("sidebar").classList.toggle("show");
+});
+
+statusFilter.value = "pending";
+statusFilter.style.display = "none";
+
+guard().then(ok => { if (ok) loadWithdrawals(); });
+</script>
+</body>
+</html>

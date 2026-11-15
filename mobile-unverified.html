@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio - Mobile Unverified</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f4f6fb;color:#20283a}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:235px;background:#172238;color:white;padding:23px 14px;flex-shrink:0}
+.brand{font-size:25px;font-weight:bold;color:#54dfb1;margin:0 10px 8px}
+.sub{font-size:11px;color:#aebbd0;margin:0 10px 25px;letter-spacing:2px}
+.sidebar a{display:block;padding:12px 14px;color:#d5ddec;text-decoration:none;border-radius:8px;margin:5px 0;font-size:14px}
+.sidebar a:hover,.sidebar a.active{background:#29405e;color:#54dfb1}
+.main{flex:1;min-width:0;padding:28px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:25px}
+h1{font-size:27px;margin-bottom:7px}
+.muted{color:#7e899e;font-size:13px;line-height:1.6}
+.admin{background:white;padding:11px 16px;border-radius:10px;font-size:13px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:22px}
+.card{background:white;padding:21px;border-radius:13px;box-shadow:0 3px 15px #192b4710}
+.card p{font-size:13px;color:#7e899e;margin-bottom:12px}
+.card h2{font-size:27px}
+.orange{color:#d78b19}.green{color:#149d78}
+.panel{background:white;border-radius:13px;padding:22px;box-shadow:0 3px 15px #192b4710}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.panel h3{font-size:18px}
+.controls{display:flex;gap:9px;flex-wrap:wrap}
+input,select{padding:11px 12px;border:1px solid #dfe4ee;border-radius:8px;font-size:13px;outline:none;background:white}
+input{min-width:210px}
+button{border:0;border-radius:7px;padding:10px 12px;cursor:pointer;font-weight:600;font-size:12px}
+button:disabled{opacity:.6;cursor:not-allowed}
+.btn-green{background:#d9f8ed;color:#087b5d}
+.btn-orange{background:#fff0d3;color:#95600c}
+.btn-dark{background:#263751;color:white}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:750px}
+th,td{text-align:left;padding:14px 12px;border-bottom:1px solid #edf0f5;font-size:13px}
+th{color:#7e899e;font-size:11px;text-transform:uppercase;letter-spacing:.5px;background:#fafbfe}
+.pill{display:inline-block;padding:5px 9px;border-radius:20px;background:#fff0d3;color:#95600c;font-size:11px}
+.empty{text-align:center;padding:30px;color:#8791a3}
+.notice{padding:12px 14px;margin-bottom:16px;border-radius:8px;font-size:13px;line-height:1.6;display:none}
+.notice.error{display:block;background:#fff0f0;color:#a52b35}
+.notice.info{display:block;background:#eef6ff;color:#285a89}
+.footer{font-size:12px;color:#8a94a7;margin-top:20px;text-align:center}
+@media(max-width:850px){.sidebar{width:190px}.main{padding:18px}.cards{grid-template-columns:1fr}}
+@media(max-width:560px){.layout{display:block}.sidebar{width:100%;padding:15px}.sidebar a{display:inline-block;padding:9px}.sub{margin-bottom:10px}.main{padding:14px}.panel{padding:14px}h1{font-size:23px}}
+</style>
+</head>
+
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="brand">Capitaxio</div>
+  <div class="sub">ADMIN PANEL</div>
+  <a href="admin.html">Dashboard</a>
+  <a href="manage-users.html">Manage Users</a>
+  <a href="active-users.html">Active Users</a>
+  <a href="banned-users.html">Banned Users</a>
+  <a href="email-unverified.html">Email Unverified</a>
+  <a class="active" href="mobile-unverified.html">Mobile Unverified</a>
+  <a href="user-verification.html">User Verification</a>
+  <a href="kyc-settings.html">KYC Settings</a>
+  <a href="deposits.html">Deposits</a>
+  <a href="withdrawals.html">Withdrawals</a>
+  <a href="system-configuration.html">System Configuration</a>
+  <a href="#" onclick="logout(event)">Logout</a>
+</aside>
+
+<main class="main">
+  <div class="top">
+    <div>
+      <h1>Mobile Unverified Users</h1>
+      <p class="muted">Review user accounts with pending mobile number verification.</p>
+    </div>
+    <div class="admin">🛡️ Administrator</div>
+  </div>
+
+  <div id="notice" class="notice"></div>
+
+  <div class="cards">
+    <div class="card"><p>Total Listed Users</p><h2 id="total">0</h2></div>
+    <div class="card"><p>Mobile Verification Pending</p><h2 class="orange" id="pending">0</h2></div>
+    <div class="card"><p>Mobile Verified</p><h2 class="green" id="verified">0</h2></div>
+  </div>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div>
+        <h3>Mobile Verification List</h3>
+        <p class="muted" style="margin-top:7px">Manage mobile verification records stored in Supabase.</p>
+      </div>
+      <div class="controls">
+        <input id="search" placeholder="Search name, phone or ID...">
+        <select id="filter">
+          <option value="all">All Users</option>
+          <option value="pending">Unverified</option>
+          <option value="verified">Verified</option>
+        </select>
+        <button class="btn-dark" id="refreshBtn" onclick="loadUsers()">Refresh</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>User ID</th>
+            <th>Name</th>
+            <th>Mobile Number</th>
+            <th>Joined Date</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="empty" id="empty">Loading users...</div>
+    </div>
+  </section>
+
+  <div class="footer">Capitaxio Admin Panel · Mobile Verification</div>
+</main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+
+const client = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+// Apni database ke exact column names yahan check karein.
+const TABLE = "users";
+const MOBILE_COLUMN = "mobile_verified";
+const ID_COLUMN = "id";
+
+let users = [];
+let busy = false;
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[char]));
+}
+
+function showNotice(message, type = "error") {
+  const notice = document.getElementById("notice");
+  notice.textContent = message;
+  notice.className = "notice " + type;
+}
+
+function clearNotice() {
+  const notice = document.getElementById("notice");
+  notice.textContent = "";
+  notice.className = "notice";
+}
+
+function isVerified(user) {
+  const value = user[MOBILE_COLUMN];
+
+  return value === true ||
+    value === 1 ||
+    String(value).toLowerCase() === "verified";
+}
+
+function getName(user) {
+  return user.full_name ||
+    user.name ||
+    user.username ||
+    user.first_name ||
+    user.email ||
+    "Unnamed User";
+}
+
+function getMobile(user) {
+  return user.mobile ||
+    user.phone ||
+    user.phone_number ||
+    user.mobile_number ||
+    "Not provided";
+}
+
+function getDate(user) {
+  const date = user.created_at || user.joined_at;
+
+  if (!date) return "—";
+
+  const parsed = new Date(date);
+
+  return Number.isNaN(parsed.getTime())
+    ? "—"
+    : parsed.toISOString().slice(0, 10);
+}
+
+async function loadUsers() {
+  if (busy) return;
+
+  busy = true;
+  clearNotice();
+
+  const refreshBtn = document.getElementById("refreshBtn");
+  refreshBtn.disabled = true;
+  refreshBtn.textContent = "Loading...";
+
+  document.getElementById("empty").style.display = "block";
+  document.getElementById("empty").textContent = "Loading users...";
+
+  try {
+    const { data, error } = await client
+      .from(TABLE)
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    users = data || [];
+    render();
+
+    if (users.length === 0) {
+      showNotice(
+        "Database se koi user record nahi mila. Apni users table check karein.",
+        "info"
+      );
+    }
+  } catch (error) {
+    users = [];
+    render();
+    showNotice(
+      "Supabase se data load nahi hua: " + error.message +
+      ". Table name, columns aur RLS policies check karein."
+    );
+  } finally {
+    busy = false;
+    refreshBtn.disabled = false;
+    refreshBtn.textContent = "Refresh";
+  }
+}
+
+function render() {
+  const query = document.getElementById("search").value
+    .toLowerCase().trim();
+
+  const filter = document.getElementById("filter").value;
+
+  const pendingCount = users.filter(user => !isVerified(user)).length;
+  const verifiedCount = users.length - pendingCount;
+
+  document.getElementById("total").textContent = users.length;
+  document.getElementById("pending").textContent = pendingCount;
+  document.getElementById("verified").textContent = verifiedCount;
+
+  const result = users.filter(user => {
+    const status = isVerified(user) ? "verified" : "pending";
+
+    const searchable = [
+      user[ID_COLUMN],
+      getName(user),
+      getMobile(user)
+    ].join(" ").toLowerCase();
+
+    return searchable.includes(query) &&
+      (filter === "all" || status === filter);
+  });
+
+  document.getElementById("rows").innerHTML = result.map(user => {
+    const verified = isVerified(user);
+    const id = String(user[ID_COLUMN] ?? "");
+
+    return `
+      <tr>
+        <td>${escapeHTML(id)}</td>
+        <td>${escapeHTML(getName(user))}</td>
+        <td>${escapeHTML(getMobile(user))}</td>
+        <td>${escapeHTML(getDate(user))}</td>
+        <td>
+          <span class="pill" style="${
+            verified
+              ? "background:#d9f8ed;color:#087b5d"
+              : ""
+          }">
+            ${verified ? "Verified" : "Unverified"}
+          </span>
+        </td>
+        <td>
+          <button
+            class="${verified ? "btn-orange" : "btn-green"}"
+            onclick="toggleVerification(${JSON.stringify(id)})"
+            ${busy ? "disabled" : ""}>
+            ${verified ? "Mark Unverified" : "Mark Verified"}
+          </button>
+        </td>
+      </tr>`;
+  }).join("");
+
+  const empty = document.getElementById("empty");
+  empty.style.display = result.length ? "none" : "block";
+
+  if (!result.length) {
+    empty.textContent = users.length
+      ? "No matching users found."
+      : "No users to display.";
+  }
+}
+
+async function toggleVerification(id) {
+  if (busy) return;
+
+  const user = users.find(
+    item => String(item[ID_COLUMN]) === String(id)
+  );
+
+  if (!user) return;
+
+  const newValue = !isVerified(user);
+  const action = newValue ? "verify" : "unverify";
+
+  if (!confirm(
+    `Kya aap is user ka mobile status ${action} karna chahte hain?`
+  )) return;
+
+  clearNotice();
+
+  try {
+    const { data, error } = await client
+      .from(TABLE)
+      .update({ [MOBILE_COLUMN]: newValue })
+      .eq(ID_COLUMN, user[ID_COLUMN])
+      .select();
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      throw new Error(
+        "Record update nahi hua. RLS policy aur user ID check karein."
+      );
+    }
+
+    showNotice("Mobile verification status database mein update ho gaya.", "info");
+    await loadUsers();
+  } catch (error) {
+    showNotice(
+      "Status update nahi hua: " + error.message +
+      ". Confirm karein ke mobile_verified column maujood hai aur update policy allowed hai."
+    );
+  }
+}
+
+async function logout(event) {
+  event.preventDefault();
+
+  const { error } = await client.auth.signOut();
+
+  if (error) {
+    showNotice("Logout error: " + error.message);
+    return;
+  }
+
+  window.location.href = "admin-login.html";
+}
+
+document.getElementById("search").addEventListener("input", render);
+document.getElementById("filter").addEventListener("change", render);
+
+loadUsers();
+</script>
+</body>
+</html>

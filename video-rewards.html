@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Rewards | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "description": "Video tasks. User video dekhta hai aur kam az kam tay shuda second guzarne ke baad tay shuda inaam hasil karta hai.",
+ "table": "video_rewards",
+ "orderBy": "created_at",
+ "columns": [
+  {
+   "key": "title",
+   "label": "Title",
+   "type": "text"
+  },
+  {
+   "key": "video_url",
+   "label": "Video Link",
+   "type": "text"
+  },
+  {
+   "key": "reward",
+   "label": "Reward",
+   "type": "money"
+  },
+  {
+   "key": "min_seconds",
+   "label": "Min seconds",
+   "type": "text"
+  },
+  {
+   "key": "is_active",
+   "label": "Active",
+   "type": "bool"
+  }
+ ],
+ "form": [
+  {
+   "key": "title",
+   "label": "Video ka naam",
+   "type": "text",
+   "required": true,
+   "maxlength": 120
+  },
+  {
+   "key": "video_url",
+   "label": "Video ka link",
+   "type": "url",
+   "required": true,
+   "maxlength": 400,
+   "placeholder": "https://..."
+  },
+  {
+   "key": "reward",
+   "label": "Inaam (Rs.)",
+   "type": "number",
+   "required": true,
+   "min": 0
+  },
+  {
+   "key": "min_seconds",
+   "label": "Kam az kam kitne second baad inaam mile",
+   "type": "number",
+   "min": 0,
+   "default": 30
+  },
+  {
+   "key": "is_active",
+   "label": "Active",
+   "type": "checkbox",
+   "default": true
+  }
+ ],
+ "canAdd": true,
+ "canEdit": true,
+ "canDelete": true,
+ "toggleKey": "is_active",
+ "searchKeys": [
+  "title",
+  "video_url"
+ ],
+ "addLabel": "+ New Video",
+ "title": "Video Rewards"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

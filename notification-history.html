@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notification History | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "description": "Ab tak ke saare notices (active aur band dono), sirf dekhne ke liye. Naya notice Notice Board se banta hai.",
+ "table": "notices",
+ "orderBy": "created_at",
+ "columns": [
+  {
+   "key": "title",
+   "label": "Title",
+   "type": "text"
+  },
+  {
+   "key": "message",
+   "label": "Message",
+   "type": "text"
+  },
+  {
+   "key": "notice_type",
+   "label": "Type",
+   "type": "badge"
+  },
+  {
+   "key": "is_active",
+   "label": "Active",
+   "type": "bool"
+  },
+  {
+   "key": "created_at",
+   "label": "Date",
+   "type": "datetime"
+  }
+ ],
+ "searchKeys": [
+  "title",
+  "message"
+ ],
+ "title": "Notification History"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>p

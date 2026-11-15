@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio - Security Settings</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#15162e;--purple:#7655e8;--bg:#f5f6fc;--text:#24253b;--muted:#85879b;--border:#e9e9f2}
+body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:250px;background:var(--navy);color:white;padding:24px 15px;position:fixed;inset:0 auto 0 0;overflow-y:auto;z-index:20}
+.brand{font-size:24px;font-weight:800;padding:5px 12px 8px}.brand span{color:#a996ff}
+.brand-sub{font-size:10px;letter-spacing:2px;color:#a9a9c3;padding:0 13px 30px}
+.menu-label{font-size:10px;color:#8586a5;padding:12px 13px;letter-spacing:1.5px}
+.nav-link{display:flex;align-items:center;gap:12px;padding:12px 13px;margin:4px 0;color:#c4c5dc;text-decoration:none;border-radius:9px;font-size:13px}
+.nav-link:hover,.nav-link.active{background:#302754;color:white}
+.nav-link.active{border-left:3px solid #a18aff}.nav-icon{width:20px;text-align:center}
+.sidebar-bottom{border-top:1px solid #363650;margin-top:30px;padding-top:15px}
+.main{margin-left:250px;width:calc(100% - 250px);padding:28px 32px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:28px}
+.top-left{display:flex;align-items:center;gap:12px}
+.topbar h2{font-size:23px}.topbar p{color:var(--muted);font-size:12px;margin-top:6px}
+.menu-toggle{display:none;border:0;background:white;padding:9px 12px;border-radius:8px;font-size:20px}
+.admin-profile{display:flex;align-items:center;gap:10px}
+.avatar{width:39px;height:39px;border-radius:50%;background:#e8e1ff;color:#6748d4;display:grid;place-items:center;font-weight:bold}
+.profile-text strong{font-size:12px;display:block}.profile-text small{font-size:11px;color:var(--muted)}
+.breadcrumb{font-size:12px;color:var(--muted);margin-bottom:22px}.breadcrumb strong{color:var(--purple)}
+.notice{background:#f0ebff;border:1px solid #ded3ff;padding:13px 16px;border-radius:10px;color:#5741a3;font-size:12px;line-height:1.7;margin-bottom:22px}
+.warning{background:#fff5e8;border:1px solid #f3dfbd;color:#97601d;padding:13px 16px;border-radius:10px;font-size:12px;line-height:1.7;margin-bottom:22px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.panel{background:white;border:1px solid var(--border);border-radius:13px;overflow:hidden}
+.panel-header{padding:20px 22px;border-bottom:1px solid var(--border)}
+.panel-header h3{font-size:16px}.panel-header p{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6}
+.panel-body{padding:22px}
+.field{margin-bottom:19px}.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:12px;font-weight:700;margin-bottom:8px}
+.field small{display:block;color:var(--muted);font-size:11px;line-height:1.6;margin-top:7px}
+.field select{width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;background:white;color:var(--text);font-size:12px;outline:none}
+.field select:focus{border-color:#a18aff}
+.setting-row{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:16px 0;border-bottom:1px solid #f0f0f6}
+.setting-row:first-child{padding-top:0}.setting-row:last-child{border-bottom:0;padding-bottom:0}
+.setting-copy{flex:1}.setting-copy strong{font-size:12px;display:block}
+.setting-copy p{font-size:11px;color:var(--muted);line-height:1.6;margin-top:5px}
+.switch{position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;inset:0;background:#d5d6e1;border-radius:24px;transition:.2s}
+.slider:before{content:"";position:absolute;height:18px;width:18px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s}
+.switch input:checked+.slider{background:var(--purple)}
+.switch input:checked+.slider:before{transform:translateX(18px)}
+.btn{border:0;border-radius:8px;padding:11px 15px;font-size:12px;font-weight:600;cursor:pointer}
+.btn-primary{background:var(--purple);color:white}.btn-primary:hover{background:#6240d4}
+.btn-muted{background:#f1f1f7;color:#64657a}
+.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px}
+.status-list{padding:0 22px}
+.status-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 0;border-bottom:1px solid #f0f0f6}
+.status-row:last-child{border-bottom:0}
+.status-copy strong{font-size:12px;display:block}
+.status-copy small{display:block;font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5}
+.pill{padding:6px 9px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+.pill.demo{background:#f0ebff;color:#6748d4}
+.footer-note{text-align:center;color:var(--muted);font-size:11px;margin:20px 0}
+.toast{position:fixed;bottom:20px;right:20px;background:#252442;color:white;padding:14px 18px;border-radius:9px;font-size:12px;z-index:80;display:none;max-width:calc(100% - 40px)}
+.toast.show{display:block}
+body{visibility:hidden}
+@media(max-width:1050px){.grid{grid-template-columns:1fr}}
+@media(max-width:1000px){.sidebar{transform:translateX(-100%);transition:transform .25s}.sidebar.open{transform:translateX(0)}.main{margin-left:0;width:100%;padding:22px}.menu-toggle{display:block}}
+@media(max-width:650px){.main{padding:16px}.topbar h2{font-size:19px}.profile-text{display:none}.panel-body{padding:17px}.panel-header{padding:17px}.status-list{padding:0 17px}}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar" id="sidebar">
+  <div class="brand">C<span>ap</span>itaxio</div>
+  <div class="brand-sub">ADMIN CONTROL PANEL</div>
+  <div class="menu-label">MAIN MENU</div>
+  <a class="nav-link" href="admin.html"><span class="nav-icon">▦</span>Dashboard</a>
+  <a class="nav-link" href="general-settings.html"><span class="nav-icon">⚙</span>General Settings</a>
+  <div class="menu-label">USER MANAGEMENT</div>
+  <a class="nav-link" href="manage-users.html"><span class="nav-icon">♙</span>Manage Users</a>
+  <a class="nav-link" href="deposits.html"><span class="nav-icon">↙</span>Deposits</a>
+  <a class="nav-link" href="withdrawals.html"><span class="nav-icon">↗</span>Withdrawals</a>
+  <div class="menu-label">PAYMENT & SYSTEM</div>
+  <a class="nav-link" href="payment-gateways.html"><span class="nav-icon">▣</span>Payment Gateways</a>
+  <div class="menu-label">ADMINISTRATION</div>
+  <a class="nav-link" href="manage-admins.html"><span class="nav-icon">♙</span>Manage Admins</a>
+  <a class="nav-link" href="admin-activity-logs.html"><span class="nav-icon">☷</span>Activity Logs</a>
+  <a class="nav-link" href="notifications.html"><span class="nav-icon">♧</span>Notifications</a>
+  <a class="nav-link active" href="security-settings.html"> <span class="nav-icon">♢</span>Security Settings</a>
+  <div class="sidebar-bottom"><a class="nav-link" href="#" id="logoutLink"><span class="nav-icon">⇥</span>Logout</a></div>
+</aside>
+
+<main class="main">
+<header class="topbar">
+  <div class="top-left">
+    <button class="menu-toggle" id="menuToggle" aria-label="Open menu">☰</button>
+    <div><h2>Security Settings</h2><p>Manage admin security preferences.</p></div>
+  </div>
+  <div class="admin-profile"><div class="avatar" id="avatar">AD</div><div class="profile-text"><strong id="adminName">Administrator</strong><small>Admin Panel</small></div></div>
+</header>
+
+<div class="breadcrumb">Administration / <strong>Security Settings</strong></div>
+<div class="notice"><strong>Connected:</strong> These preferences are saved in your Supabase database and loaded when you revisit this page.</div>
+<div class="warning"><strong>Important:</strong> These are stored preferences only. Actual login limits, session expiry and two-factor authentication must also be enforced by secure server-side authentication settings.</div>
+
+<div class="grid">
+<section class="panel">
+  <div class="panel-header"><h3>Login Protection</h3><p>Login-related security preferences.</p></div>
+  <div class="panel-body">
+    <div class="field">
+      <label for="maxAttempts">Maximum Login Attempts</label>
+      <select id="maxAttempts"><option value="3">3 attempts</option><option value="5">5 attempts</option><option value="10">10 attempts</option></select>
+      <small>Stored as a preference; not an active login limiter by itself.</small>
+    </div>
+    <div class="field">
+      <label for="lockout">Lockout Duration</label>
+      <select id="lockout"><option value="5">5 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">60 minutes</option></select>
+    </div>
+    <div class="field">
+      <label for="sessionTimeout">Session Timeout</label>
+      <select id="sessionTimeout"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">60 minutes</option><option value="120">2 hours</option></select>
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-header"><h3>Security Preferences</h3><p>Save your preferred security options.</p></div>
+  <div class="panel-body">
+    <div class="setting-row"><div class="setting-copy"><strong>Two-Factor Authentication</strong><p>Preference for additional verification.</p></div><label class="switch"><input type="checkbox" id="twoFactor"><span class="slider"></span></label></div>
+    <div class="setting-row"><div class="setting-copy"><strong>Login Alerts</strong><p>Preference for sign-in alerts.</p></div><label class="switch"><input type="checkbox" id="loginAlerts"><span class="slider"></span></label></div>
+    <div class="setting-row"><div class="setting-copy"><strong>Security Notifications</strong><p>Preference for security notifications.</p></div><label class="switch"><input type="checkbox" id="securityAlerts"><span class="slider"></span></label></div>
+    <div class="setting-row"><div class="setting-copy"><strong>Maintenance Warning</strong><p>Show a reminder to review security.</p></div><label class="switch"><input type="checkbox" id="maintenanceWarning"><span class="slider"></span></label></div>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-header"><h3>Password Policy</h3><p>Suggested password requirements.</p></div>
+  <div class="panel-body">
+    <div class="field">
+      <label for="passwordLength">Minimum Password Length</label>
+      <select id="passwordLength"><option value="8">8 characters</option><option value="10">10 characters</option><option value="12">12 characters</option><option value="16">16 characters</option></select>
+    </div>
+    <div class="setting-row"><div class="setting-copy"><strong>Require Uppercase Letters</strong><p>Suggested password rule.</p></div><label class="switch"><input type="checkbox" id="uppercase"><span class="slider"></span></label></div>
+    <div class="setting-row"><div class="setting-copy"><strong>Require Numbers</strong><p>Suggested password rule.</p></div><label class="switch"><input type="checkbox" id="numbers"><span class="slider"></span></label></div>
+    <div class="setting-row"><div class="setting-copy"><strong>Require Symbols</strong><p>Suggested password rule.</p></div><label class="switch"><input type="checkbox" id="symbols"><span class="slider"></span></label></div>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-header"><h3>Security Checklist</h3><p>Implementation status.</p></div>
+  <div class="status-list">
+    <div class="status-row"><div class="status-copy"><strong>Supabase authentication</strong><small>Admin session check on this page.</small></div><span class="pill demo">Connected</span></div>
+    <div class="status-row"><div class="status-copy"><strong>Admin authorization</strong><small>Checks active admin record.</small></div><span class="pill demo">Checked</span></div>
+    <div class="status-row"><div class="status-copy"><strong>Login attempt protection</strong><small>Requires server-side rate limiting.</small></div><span class="pill demo">Not Configured</span></div>
+    <div class="status-row"><div class="status-copy"><strong>Audit log storage</strong><small>Requires a separate audit logging workflow.</small></div><span class="pill demo">Not Configured</span></div>
+  </div>
+</section>
+</div>
+
+<div class="actions">
+  <button class="btn btn-muted" id="resetBtn">Reset Form</button>
+  <button class="btn btn-primary" id="saveBtn">Save Settings</button>
+</div>
+<p class="footer-note">Capitaxio Admin Panel · Security Settings</p>
+</main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const SUPABASE_URL="https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY="sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const $=id=>document.getElementById(id);
+const defaults={
+ maxAttempts:"5",lockout:"15",sessionTimeout:"30",twoFactor:false,
+ loginAlerts:true,securityAlerts:true,maintenanceWarning:true,
+ passwordLength:"10",uppercase:true,numbers:true,symbols:false
+};
+let toastTimer;
+
+function showToast(message){
+ const toast=$("toast");
+ toast.textContent=message;
+ toast.classList.add("show");
+ clearTimeout(toastTimer);
+ toastTimer=setTimeout(()=>toast.classList.remove("show"),3500);
+}
+
+function applySettings(settings){
+ Object.keys(defaults).forEach(id=>{
+  const element=$(id);
+  const value=settings[id]===undefined?defaults[id]:settings[id];
+  if(element.type==="checkbox")element.checked=Boolean(value);
+  else element.value=String(value);
+ });
+}
+
+function readSettings(){
+ const result={};
+ Object.keys(defaults).forEach(id=>{
+  const element=$(id);
+  result[id]=element.type==="checkbox"?element.checked:element.value;
+ });
+ return result;
+}
+
+async function checkAdmin(){
+ const {data:sessionData,error:sessionError}=await db.auth.getSession();
+
+ if(sessionError||!sessionData.session){
+  location.replace("admin-login.html");
+  return false;
+ }
+
+ const user=sessionData.session.user;
+
+ const {data:admin,error}=await db.from("admins")
+  .select("full_name,role,is_active")
+  .eq("user_id",user.id)
+  .eq("is_active",true)
+  .maybeSingle();
+
+ if(error||!admin){
+  showToast("Admin verification failed: "+(error?.message||"No active admin found."));
+  await db.auth.signOut();
+  setTimeout(()=>location.replace("admin-login.html"),1800);
+  return false;
+ }
+
+ const name=admin.full_name||"Administrator";
+ $("adminName").textContent=name;
+ $("avatar").textContent=name.charAt(0).toUpperCase();
+ document.body.style.visibility="visible";
+ return true;
+}
+
+async function loadSettings(){
+ const {data,error}=await db.from("security_settings")
+  .select("settings")
+  .eq("id",1)
+  .maybeSingle();
+
+ if(error){
+  showToast("Load error: "+error.message);
+  return;
+ }
+
+ if(data&&data.settings)applySettings(data.settings);
+ else applySettings(defaults);
+}
+
+async function saveSettings(){
+ const {data:sessionData}=await db.auth.getSession();
+ if(!sessionData.session){
+  location.replace("admin-login.html");
+  return;
+ }
+
+ const settings=readSettings();
+
+ const {error}=await db.from("security_settings").upsert({
+  id:1,
+  settings:settings,
+  updated_by:sessionData.session.user.id,
+  updated_at:new Date().toISOString()
+ },{onConflict:"id"});
+
+ if(error){
+  showToast("Save error: "+error.message);
+  return;
+ }
+
+ showToast("Security settings successfully saved to Supabase!");
+}
+
+$("saveBtn").addEventListener("click",saveSettings);
+
+$("resetBtn").addEventListener("click",()=>{
+ if(!confirm("Reset form to default settings?"))return;
+ applySettings(defaults);
+ showToast("Form reset. Press Save Settings to save these defaults.");
+});
+
+$("menuToggle").addEventListener("click",()=>{
+ $("sidebar").classList.toggle("open");
+});
+
+document.addEventListener("click",event=>{
+ const sidebar=$("sidebar");
+ if(innerWidth<=1000&&sidebar.classList.contains("open")&&
+ !sidebar.contains(event.target)&&!$("menuToggle").contains(event.target)){
+  sidebar.classList.remove("open");
+ }
+});
+
+$("logoutLink").addEventListener("click",async event=>{
+ event.preventDefault();
+ if(!confirm("Kya aap logout karna chahti hain?"))return;
+ await db.auth.signOut();
+ location.replace("admin-login.html");
+});
+
+(async()=>{
+ const allowed=await checkAdmin();
+ if(!allowed)return;
+ await loadSettings();
+})();
+</script>
+</body>
+</html>

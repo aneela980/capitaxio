@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio - Admin Panel</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root{
+  --navy:#0a1352;
+  --navy-dark:#07104a;
+  --purple:#4a3aff;
+  --text:#e9edff;
+  --muted:#9aa6d4;
+  --bg:#111;
+  --card:#151515;
+  --border:#2c2c2c;
+  --orange:#ffb36b;
+  --violet:#bb86ff;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,Roboto,sans-serif}
+body{background:var(--bg);color:var(--text);overflow-x:hidden;visibility:hidden}
+.topbar{position:fixed;top:0;left:0;right:0;height:68px;background:var(--navy);border-bottom:1px solid #1d2a78;display:flex;align-items:center;justify-content:space-between;padding-right:18px;z-index:30}
+.top-left{display:flex;align-items:center;height:100%}
+.toggle{width:68px;height:68px;background:var(--purple);border:0;color:white;font-size:26px;cursor:pointer}
+.page-name{margin-left:18px;font-size:17px;font-weight:600}
+.top-right{display:flex;align-items:center;gap:16px}
+.bell{position:relative;background:none;border:0;color:white;font-size:24px;cursor:pointer}
+.dot{position:absolute;top:-4px;right:-5px;min-width:18px;height:18px;border-radius:9px;background:#ff5568;color:white;font-size:10px;display:none;align-items:center;justify-content:center;padding:0 4px}
+.avatar{width:42px;height:42px;border-radius:50%;background:white;color:var(--navy);display:grid;place-items:center;font-weight:900}
+.sidebar{position:fixed;top:68px;left:0;bottom:0;width:290px;background:var(--navy);overflow-y:auto;z-index:20;transition:transform .25s;scrollbar-width:thin}
+.sidebar.hidden{transform:translateX(-100%)}
+.logo-box{padding:22px 20px 26px}
+.logo-sq{width:150px;background:white;border-radius:4px;padding:14px 10px;text-align:center;color:var(--navy);font-weight:900;font-size:21px;letter-spacing:1px}
+.logo-sq small{display:block;font-weight:500;font-size:11px;color:#4a5188;margin-top:5px}
+.menu-label{color:#9aa6d4;font-size:11px;letter-spacing:2px;padding:18px 22px 8px}
+.item{display:flex;align-items:center;gap:14px;width:100%;padding:15px 20px;border:0;background:transparent;color:var(--text);font-size:14px;text-align:left;cursor:pointer;text-decoration:none}
+.item:hover,.item.active,.item.open{background:var(--purple);color:white}
+.item .ico{width:25px;text-align:center;font-size:18px;flex-shrink:0}
+.item .txt{flex:1}
+.item .arr{transition:transform .2s}
+.item.open .arr{transform:rotate(180deg)}
+.sub{display:none;background:var(--navy-dark);padding:4px 0 8px}
+.sub.open{display:block}
+.sub .item{padding:12px 18px 12px 42px;font-size:13px;gap:12px}
+.sub .item .ico{font-size:14px;width:18px}
+.content{margin-left:290px;margin-top:68px;min-height:calc(100vh - 68px);transition:margin .25s}
+.content.full{margin-left:0}
+.home{padding:26px 22px 40px}
+.home h1{font-size:25px;margin-bottom:6px}
+.sub-t{color:var(--muted);font-size:13px;margin-bottom:22px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.stat{border-radius:18px;padding:22px;min-height:140px;border:1px solid var(--border);background:var(--card)}
+.stat.orange{background:var(--orange);color:#2a1700;border-color:transparent}
+.stat.violet{background:var(--violet);color:#25083f;border-color:transparent}
+.lbl{font-size:14px;font-weight:600}
+.num{font-size:28px;font-weight:800;margin-top:14px;overflow-wrap:anywhere}
+.note{font-size:12px;opacity:.75;margin-top:8px}
+.go{margin-top:12px;font-size:12px;background:#ffffff26;border:0;color:inherit;padding:7px 11px;border-radius:8px;cursor:pointer}
+.section-t{font-size:18px;margin:30px 0 14px}
+.quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.quick button{background:#16213f;border:1px solid #28365f;color:white;border-radius:14px;padding:17px 14px;text-align:left;cursor:pointer;font-size:13px}
+.quick button:hover{border-color:var(--purple)}
+.quick b{display:block;font-size:22px;margin-bottom:8px}
+.err{margin-top:18px;padding:13px;border-radius:10px;background:#3a1920;color:#ffb9c2;font-size:13px;display:none}
+.frame-wrap{display:none}
+.frame-wrap iframe{display:block;width:100%;height:calc(100vh - 68px);border:0;background:#f4f6fc}
+.placeholder{display:none;padding:40px 22px}
+.placeholder .box{max-width:520px;margin:40px auto;text-align:center;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:34px 22px}
+.placeholder p{color:var(--muted);font-size:14px;line-height:1.7;margin-top:12px}
+.overlay{display:none;position:fixed;inset:68px 0 0;background:#000a;z-index:15}
+@media(max-width:1100px){.grid,.quick{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:850px){
+ .sidebar{transform:translateX(-100%);width:min(310px,86vw)}
+ .sidebar.show{transform:translateX(0)}
+ .content{margin-left:0}
+ .overlay.show{display:block}
+}
+@media(max-width:480px){
+ .grid,.quick{grid-template-columns:1fr}
+ .page-name{font-size:15px}
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+ <div class="top-left">
+  <button class="toggle" id="toggleBtn">☰</button>
+  <span class="page-name" id="pageName">Dashboard</span>
+ </div>
+ <div class="top-right">
+  <button class="bell" id="bellBtn">🔔<span class="dot" id="bellDot">0</span></button>
+  <div class="avatar" id="avatar">A</div>
+ </div>
+</header>
+
+<aside class="sidebar" id="sidebar">
+ <div class="logo-box">
+  <div class="logo-sq">CAPITAXIO<small>ADMIN PANEL</small></div>
+ </div>
+ <nav id="menu"></nav>
+</aside>
+
+<div class="overlay" id="overlay"></div>
+
+<main class="content" id="content">
+ <section class="home" id="homeView">
+  <h1>Dashboard Overview</h1>
+  <p class="sub-t" id="welcomeText">Welcome to your Capitaxio administration panel.</p>
+  <div class="grid" id="statGrid"></div>
+  <h2 class="section-t">Quick Actions</h2>
+  <div class="quick" id="quickGrid"></div>
+  <div class="err" id="homeErr"></div>
+ </section>
+
+ <section class="frame-wrap" id="frameWrap">
+  <iframe id="frame" title="Admin page"></iframe>
+ </section>
+
+ <section class="placeholder" id="placeholder">
+  <div class="box">
+   <h2 id="phTitle">Page</h2>
+   <p id="phText"></p>
+  </div>
+ </section>
+</main>
+
+<script>
+/* SUPABASE CONNECTION */
+const SUPABASE_URL="https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY="sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+/* MENU HELPERS */
+const P=(id,label,url,ico="⊙")=>({id,label,url,ico});
+const MENU=[
+ {id:"home",label:"Dashboard",ico:"⌂",home:true},
+
+ {section:"MAIN"},
+ P("general","General Settings","general-settings.html","⚙"),
+ P("application","Application","application.html","▣"),
+ P("admins","Manage Admins","manage-admins.html","🛡"),
+ P("activity","Admin Activity Logs","admin-activity-logs.html","📜"),
+ P("login-history","Login History","login-history.html","🕒"),
+ P("backup","Backup Restore","backup-restore.html","💾"),
+
+ {id:"users",label:"Manage Users",ico:"👥",children:[
+  P("active-users","Active Users","active-users.html"),
+  P("all-users","Manage Users","manage-users.html"),
+  P("banned-users","Banned Users","banned-users.html"),
+  P("reset-users","All Users Website Reset","all-users-website-reset.html"),
+  P("user-profile","User Profile","user-profile.html"),
+  P("users-profile","Users Profile","users-profile.html"),
+  P("user-transactions","User Transactions","user-transactions.html"),
+  P("user-deposits","User Deposits","user-deposits.html"),
+  P("user-earnings","User Earnings","user-earnings.html"),
+  P("user-ranking","User Ranking","user-ranking.html"),
+  P("with-balance","With Balance","with-balance.html"),
+  P("email-unverified","Email Unverified","email-unverified.html"),
+  P("mobile-unverified","Mobile Unverified","mobile-unverified.html"),
+  P("kyc-pending","KYC Pending","kyc-pending.html"),
+  P("kyc-unverified","KYC Unverified","kyc-unverified.html"),
+  P("user-verification","User Verification","user-verification.html")
+ ]},
+
+ {section:"INVESTMENT & REWARDS"},
+ P("active-investment-list","Active Investment List","active-investment-list.html","💼"),
+ P("active-investment-delete","Active Investment Delete","active-investment-delete.html","🗑"),
+ P("investment-history","Investment History","investment-history.html","📈"),
+ P("investment-report","Investment Report","investment-report.html","📊"),
+ P("investment-reward","Investment Reward","investment-reward.html","🎁"),
+ P("team-investment","Team Investment","team-investment.html","👥"),
+ P("team-rewards","Team Rewards","team-rewards.html","🏆"),
+ P("team-count","Team Count","team-count.html","👥"),
+ P("salary-packages","Salary Packages","salary-packages.html","💵"),
+ P("subscriber-reward","Subscriber Reward","subscriber-reward.html","🎁"),
+ P("reward-history","Reward History","reward-history.html","📜"),
+ P("reward-settings","Reward Settings","reward-settings.html","⚙"),
+ P("video-rewards","Video Rewards","video-rewards.html","▶"),
+ P("spin-rewards","Spin Rewards","spin-rewards.html","🎡"),
+
+ {section:"CAMPAIGNS & PREDICTIONS"},
+ P("campaign-products","Campaign Products","campaign-products.html","🎁"),
+ P("campaign-payments","Campaign Payments","campaign-payments.html","💳"),
+ P("campaign-winners","Campaign Winners","campaign-winners.html","🏆"),
+ P("participation-requests","Participation Requests","participation-requests.html","📋"),
+ P("approved-participants","Approved Participants","approved-participants.html","✓"),
+ P("prediction-request","Prediction Request","prediction-request.html","◎"),
+ P("prediction-trades","Prediction Trades","prediction-trades.html","📈"),
+
+ {section:"DEPOSITS & WITHDRAWALS"},
+ P("deposits","Deposits","deposits.html","↙"),
+ P("deposit-users","Deposit Users","deposit-users.html","👥"),
+ P("today-deposit-users","Today Deposit Users","today-deposit-users.html","📅"),
+ P("all-withdrawals","All Withdrawals","all-withdrawals.html","↗"),
+ P("pending-withdrawals","Pending Withdrawals","pending-withdrawals.html","⌛"),
+ P("approved-withdrawals","Approved Withdrawals","approved-withdrawals.html","✓"),
+ P("rejected-withdrawal","Rejected Withdrawal","rejected-withdrawal.html","✕"),
+ P("withdrawals","Withdrawals","withdrawals.html","💸"),
+ P("withdraw-lock","Withdraw Lock","withdraw-lock.html","🔒"),
+ P("admin-withdraw-lock","Admin Withdraw Lock","admin-withdraw-lock.html","🔐"),
+ P("withdrawal-proof","Withdrawal Proof","withdrawal-proof.html","📄"),
+ P("manual-payment","Manual Payment Gateway","manual-payment-gateway.html","💳"),
+ P("payment-gateways","Payment Gateways","payment-gateways.html","▭"),
+
+ {section:"REFERRAL & PROMOTION"},
+ P("referrals-management","Referrals Management","referrals-management.html","♧"),
+ P("referral-report","Referral Report","referral-report.html","📊"),
+ P("promo-codes","Promo Codes","promo-codes.html","🏷"),
+ P("promotional-tool","Promotional Tool","promotional-tool.html","📣"),
+
+ {section:"NOTIFICATIONS & SUPPORT"},
+ P("notice-board","Notice Board","notice-board.html","📢"),
+ P("notification-to-all","Notification to All","notification-to-all.html","📨"),
+ P("notification-settings","Notification Settings","notification-settings.html","⚙"),
+ P("notification-history","Notification History","notification-history.html","📜"),
+ P("notification-templates","Notification Templates","notification-templates.html","📝"),
+ P("push-notification-settings","Push Notification Settings","push-notification-settings.html","🔔"),
+ P("chat-settings","Chat Settings","chat-settings.html","💬"),
+ P("live-support","Live Support","live-support.html","💬"),
+ P("support","Support","support.html","🎧"),
+ P("support-tickets","Support Tickets","support-tickets.html","🎫"),
+
+ {section:"WEBSITE SETTINGS"},
+ P("time-management","Time Management","time-management.html","⏱"),
+ P("bot-management","Bot Management","bot-management.html","🤖"),
+ P("jobs-settings","Jobs Settings","jobs-settings.html","💼"),
+ P("maintenance","Maintenance","maintenance.html","🛠"),
+ P("website-status","Website Status","website-status.html","🌐"),
+ P("security-settings","Security Settings","security-settings.html","🔐"),
+ P("same-plan-pending-lock","Same Plan Pending Lock","same-plan-pending-lock.html","🔒"),
+ P("custom-css","Custom CSS","custom-css.html","{ }"),
+ P("logo-favicon","Logo Favicon","logo-favicon.html","🖼"),
+ P("language-settings","Language Settings","language-settings.html","🌐"),
+ P("holiday-settings","Holiday Settings","holiday-settings.html","📅"),
+ P("gdpr-cookie","GDPR Cookie","gdpr-cookie.html","🍪"),
+ P("extensions","Extensions","extensions.html","🧩"),
+ P("seo-manager","SEO Manager","seo-manager.html","🔍"),
+ P("privacy-settings","Privacy Settings","privacy-settings.html","🛡"),
+ P("terms-settings","Terms Settings","terms-settings.html","📄"),
+ P("faq-section","FAQ Section","faq-section.html","❔"),
+ P("plan-section","Plan Section","plan-section.html","📦"),
+ P("popup-notifications","Popup Notifications","popup-notifications.html","🔔"),
+ P("finance-report","Finance Report","finance-report.html","📊"),
+ P("reports-analytics","Reports Analytics","reports-analytics.html","📈"),
+ P("transaction-log","Transaction Log","transaction-log.html","📜"),
+ P("application-page","Application Page","application.html","▣"),
+ P("withdrawal-methods","Withdrawal Methods","withdrawal-methods.html","💳"),
+ P("notice","Notification Notice Board","notice-board.html","📢"),
+ P("custom-css-page","Custom CSS Settings","custom-css.html","{ }"),
+ P("admin-login-page","Admin Login","admin-login.html","🔑"),
+
+ {section:"SYSTEM"},
+ 
+
+ P("manage-pages","Manage Pages","manage-pages.html","☷"),
+ P("manage-templates","Manage Templates","manage-templates.html","▤"),
+ 
+ P("application-settings","Application Settings","application.html","▣"),
+ P("logout","Logout","#","⇥")
+];
+
+const menuEl=document.getElementById("menu");
+const sidebar=document.getElementById("sidebar");
+const overlay=document.getElementById("overlay");
+const content=document.getElementById("content");
+const itemIndex={};
+let currentId="home";
+let counts={dep:0,wd:0,kyc:0};
+
+function el(tag,cls,txt){
+ const e=document.createElement(tag);
+ if(cls)e.className=cls;
+ if(txt!==undefined)e.textContent=txt;
+ return e;
+}
+
+function buildMenu(){
+ menuEl.textContent="";
+ MENU.forEach(m=>{
+  if(m.section){
+   menuEl.appendChild(el("div","menu-label",m.section));
+   return;
+  }
+  itemIndex[m.id]=m;
+  const btn=el("button","item");
+  btn.type="button";
+  btn.dataset.id=m.id;
+  btn.appendChild(el("span","ico",m.ico||"⊙"));
+  btn.appendChild(el("span","txt",m.label));
+
+  if(m.children){
+   btn.appendChild(el("span","arr","⌄"));
+   const sub=el("div","sub");
+   sub.id="sub-"+m.id;
+   m.children.forEach(c=>{
+    itemIndex[c.id]=c;
+    const cb=el("button","item");
+    cb.type="button";
+    cb.dataset.id=c.id;
+    cb.appendChild(el("span","ico","⊙"));
+    cb.appendChild(el("span","txt",c.label));
+    cb.addEventListener("click",()=>go(c.id));
+    sub.appendChild(cb);
+   });
+   btn.addEventListener("click",()=>{
+    const open=sub.classList.toggle("open");
+    btn.classList.toggle("open",open);
+   });
+   menuEl.appendChild(btn);
+   menuEl.appendChild(sub);
+  }else{
+   btn.addEventListener("click",()=>{
+    if(m.id==="logout")doLogout();
+    else go(m.id);
+   });
+   menuEl.appendChild(btn);
+  }
+ });
+}
+
+function showOnly(which){
+ document.getElementById("homeView").style.display=which==="home"?"block":"none";
+ document.getElementById("frameWrap").style.display=which==="frame"?"block":"none";
+ document.getElementById("placeholder").style.display=which==="ph"?"block":"none";
+}
+
+function openPage(m){
+ const frame=document.getElementById("frame");
+ document.getElementById("phTitle").textContent=m.label;
+ document.getElementById("phText").textContent=
+  "Page open nahi ho raha. Check karein ke file ka naam aur admin.html ka folder same hai.";
+ showOnly("frame");
+ frame.src=m.url;
+ frame.onerror=()=>{
+  document.getElementById("phText").textContent="File nahi mili: "+m.url;
+  showOnly("ph");
+ };
+}
+
+function go(id){
+ const m=itemIndex[id];
+ if(!m)return;
+ currentId=id;
+
+ document.querySelectorAll(".item.active").forEach(x=>x.classList.remove("active"));
+ const btn=menuEl.querySelector('.item[data-id="'+id+'"]');
+ if(btn){
+  btn.classList.add("active");
+  const sub=btn.closest(".sub");
+  if(sub){
+   sub.classList.add("open");
+   const parent=menuEl.querySelector('.item[data-id="'+sub.id.replace("sub-","")+'"]');
+   if(parent)parent.classList.add("open");
+  }
+ }
+
+ document.getElementById("pageName").textContent=m.label;
+ history.replaceState(null,"","#"+id);
+
+ if(m.home){
+  showOnly("home");
+  loadHome();
+ }else if(m.url){
+  openPage(m);
+ }else{
+  showOnly("home");
+ }
+
+ if(innerWidth<=850)closeMenu();
+ window.scrollTo(0,0);
+}
+
+function closeMenu(){
+ sidebar.classList.remove("show");
+ overlay.classList.remove("show");
+}
+
+document.getElementById("toggleBtn").addEventListener("click",()=>{
+ if(innerWidth<=850){
+  const open=sidebar.classList.toggle("show");
+  overlay.classList.toggle("show",open);
+ }else{
+  const hidden=sidebar.classList.toggle("hidden");
+  content.classList.toggle("full",hidden);
+ }
+});
+overlay.addEventListener("click",closeMenu);
+
+/* ADMIN LOGIN CHECK */
+async function guard(){
+ try{
+  const {data:s,error}=await db.auth.getSession();
+  if(error||!s.session){
+   location.replace("admin-login.html");
+   return false;
+  }
+
+  const {data:a,error:adminError}=await db.from("admins")
+   .select("full_name")
+   .eq("user_id",s.session.user.id)
+   .eq("is_active",true)
+   .maybeSingle();
+
+  if(adminError||!a){
+   await db.auth.signOut();
+   location.replace("admin-login.html");
+   return false;
+  }
+
+  const name=a.full_name||"Admin";
+  document.getElementById("avatar").textContent=name.charAt(0).toUpperCase();
+  document.getElementById("welcomeText").textContent="Welcome, "+name+". Welcome to Capitaxio Admin Panel.";
+  document.body.style.visibility="visible";
+  return true;
+ }catch(e){
+  alert("Login check error: "+e.message);
+  location.replace("admin-login.html");
+  return false;
+ }
+}
+
+async function doLogout(){
+ if(!confirm("Kya aap logout karna chahti hain?"))return;
+ await db.auth.signOut();
+ location.href="admin-login.html";
+}
+
+/* DASHBOARD DATA */
+async function countRows(table,filter){
+ try{
+  let q=db.from(table).select("*",{count:"exact",head:true});
+  if(filter)q=filter(q);
+  const r=await q;
+  return r.error?null:r.count;
+ }catch(e){return null}
+}
+
+async function sumApproved(table){
+ try{
+  const r=await db.from(table).select("amount,status").limit(5000);
+  if(r.error)return null;
+  return (r.data||[])
+   .filter(x=>String(x.status||"").toLowerCase()==="approved")
+   .reduce((s,x)=>s+Number(x.amount||0),0);
+ }catch(e){return null}
+}
+
+function fmt(n){return n===null?"—":Number(n).toLocaleString("en-PK")}
+function money(n){return n===null?"—":"Rs "+Number(n).toLocaleString("en-PK")}
+
+async function loadHome(){
+ const grid=document.getElementById("statGrid");
+ const err=document.getElementById("homeErr");
+ err.style.display="none";
+
+ const r=await Promise.all([
+  countRows("users"),
+  countRows("users",q=>q.ilike("status","active")),
+  countRows("users",q=>q.ilike("status","banned")),
+  countRows("deposits",q=>q.ilike("status","pending")),
+  countRows("withdrawals",q=>q.ilike("status","pending")),
+  countRows("kyc_verifications",q=>q.ilike("status","pending")),
+  countRows("referrals"),
+  sumApproved("deposits"),
+  sumApproved("withdrawals")
+ ]);
+
+ const [users,active,banned,depP,wdP,kycP,refs,depSum,wdSum]=r;
+ counts.dep=depP||0;
+ counts.wd=wdP||0;
+ counts.kyc=kycP||0;
+
+ const cards=[
+  ["orange","Total Users",fmt(users),"Registered accounts","all-users"],
+  ["","Active Users",fmt(active),"Active accounts","active-users"],
+  ["violet","Pending Deposits",fmt(depP),"Waiting for review","deposits"],
+  ["","Pending Withdrawals",fmt(wdP),"Waiting for review","pending-withdrawals"],
+  ["","Banned Users",fmt(banned),"Banned accounts","banned-users"],
+  ["orange","Total Deposits",money(depSum),"Approved deposits","deposits"],
+  ["violet","Total Withdrawals",money(wdSum),"Approved withdrawals","all-withdrawals"],
+  ["","Pending KYC",fmt(kycP),"Verification requests","kyc-pending"],
+  ["","Total Referrals",fmt(refs),"Referral records","referrals-management"]
+ ];
+
+ grid.textContent="";
+ cards.forEach(c=>{
+  const d=el("div","stat "+c[0]);
+  const top=el("div");
+  top.appendChild(el("div","lbl",c[1]));
+  top.appendChild(el("div","num",c[2]));
+  top.appendChild(el("div","note",c[3]));
+  d.appendChild(top);
+  const b=el("button","go","Open →");
+  b.addEventListener("click",()=>go(c[4]));
+  d.appendChild(b);
+  grid.appendChild(d);
+ });
+
+ if(r.slice(0,7).some(x=>x===null)){
+  err.textContent="Kuch dashboard numbers load nahi huay. Supabase table names aur RLS permissions check karein.";
+  err.style.display="block";
+ }
+ document.getElementById("bellDot").textContent=counts.dep+counts.wd+counts.kyc;
+ document.getElementById("bellDot").style.display=(counts.dep+counts.wd+counts.kyc)>0?"flex":"none";
+}
+
+function buildQuick(){
+ const q=document.getElementById("quickGrid");
+ [
+  ["↙","Deposits","deposits"],
+  ["↗","All Withdrawals","all-withdrawals"],
+  ["✓","KYC Pending","kyc-pending"],
+  ["👥","Manage Users","all-users"],
+  ["💳","Payment Gateways","payment-gateways"],
+  ["♧","Manage Referral","referrals-management"],
+  ["⚙","General Settings","general"],
+  ["🛠","Maintenance","maintenance"]
+ ].forEach(x=>{
+  const b=el("button");
+  const icon=el("b","",x[0]);
+  b.appendChild(icon);
+  b.appendChild(document.createTextNode(x[1]));
+  b.addEventListener("click",()=>go(x[2]));
+  q.appendChild(b);
+ });
+}
+
+document.getElementById("bellBtn").addEventListener("click",()=>{
+ if(counts.dep)go("deposits");
+ else if(counts.wd)go("pending-withdrawals");
+ else if(counts.kyc)go("kyc-pending");
+ else alert("Koi pending item nahi hai.");
+});
+
+/* START */
+buildMenu();
+buildQuick();
+
+guard().then(ok=>{
+ if(!ok)return;
+ const start=(location.hash||"").replace("#","");
+ const first=itemIndex[start]&&!itemIndex[start].logout?start:"home";
+ go(first);
+});
+</script>
+</body>
+</html>

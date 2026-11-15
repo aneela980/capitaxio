@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Activity Logs | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "title": "Activity Logs",
+ "description": "Admin panel ki kaarwai ka record (sirf dekhne ke liye).",
+ "table": "admin_activity_logs",
+ "orderBy": "created_at"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

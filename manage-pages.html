@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Pages | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "description": "Website ke pages (jaise About, Rules). Har page ka ek chhota naam (slug) hota hai, aur user usay page.html?slug=NAAM par dekhta hai.",
+ "table": "pages",
+ "orderBy": "created_at",
+ "columns": [
+  {
+   "key": "slug",
+   "label": "Slug",
+   "type": "text"
+  },
+  {
+   "key": "title",
+   "label": "Title",
+   "type": "text"
+  },
+  {
+   "key": "is_active",
+   "label": "Active",
+   "type": "bool"
+  },
+  {
+   "key": "created_at",
+   "label": "Date",
+   "type": "date"
+  }
+ ],
+ "form": [
+  {
+   "key": "slug",
+   "label": "Slug",
+   "type": "text",
+   "required": true,
+   "maxlength": 60,
+   "help": "Sirf chhote english harf, number aur '-', jaise about-us"
+  },
+  {
+   "key": "title",
+   "label": "Title",
+   "type": "text",
+   "required": true,
+   "maxlength": 120
+  },
+  {
+   "key": "content",
+   "label": "Page ka matn",
+   "type": "textarea",
+   "maxlength": 20000
+  },
+  {
+   "key": "is_active",
+   "label": "Active",
+   "type": "checkbox",
+   "default": true
+  }
+ ],
+ "canAdd": true,
+ "canEdit": true,
+ "canDelete": true,
+ "toggleKey": "is_active",
+ "searchKeys": [
+  "slug",
+  "title"
+ ],
+ "addLabel": "+ New Page",
+ "title": "Manage Pages"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

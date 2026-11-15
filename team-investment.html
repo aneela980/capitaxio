@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Capitaxio | Team Investment</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:24px;background:#081326;color:white;font-family:Arial}
+main{max-width:1200px;margin:auto}h1{margin-bottom:8px}.sub{color:#9aabc5}
+.panel,.stat{background:#13213a;border:1px solid #263b5e;border-radius:12px;padding:18px;margin:18px 0}
+.stats{display:flex;gap:12px;flex-wrap:wrap}.stat{flex:1;min-width:140px;margin:0}
+.stat span{display:block;color:#9aabc5;font-size:13px}.stat strong{display:block;font-size:24px;margin-top:8px}
+input,select{width:100%;background:#081326;color:white;border:1px solid #304767;padding:11px;border-radius:7px;margin:6px 0}
+button{padding:9px 13px;border:0;border-radius:6px;color:white;cursor:pointer;margin:2px}
+.add,.active{background:#159b68}.inactive{background:#d18a24}.del{background:#b02c3b}.refresh{background:#1769c2}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:800px}th,td{text-align:left;padding:12px;border-bottom:1px solid #263b5e;font-size:13px}
+th{background:#102b68;color:#65d6f4}.muted{color:#9aabc5}
+@media(max-width:600px){body{padding:14px}.row{grid-template-columns:1fr}}
+</style></head>
+<body><main>
+<h1>Team Investment</h1><p class="sub">Manage and monitor team investment records.</p>
+
+<div class="stats">
+ <div class="stat"><span>Total Records</span><strong id="total">0</strong></div>
+ <div class="stat"><span>Total Investment</span><strong id="amount">0</strong></div>
+ <div class="stat"><span>Active Investments</span><strong id="activeCount">0</strong></div>
+</div>
+
+<div class="panel">
+<h3>Add Team Investment</h3>
+<div class="row">
+<input id="uid" placeholder="User ID">
+<input id="name" placeholder="Member Name">
+</div>
+<div class="row">
+<input id="leader" placeholder="Team Leader ID">
+<input id="team" placeholder="Team Name">
+</div>
+<div class="row">
+<input id="invested" type="number" min="0" step="0.01" placeholder="Investment Amount">
+<select id="status"><option value="active">Active</option><option value="inactive">Inactive</option><option value="pending">Pending</option></select>
+</div>
+<button class="add" onclick="addInvestment()">Add Investment</button>
+</div>
+
+<div class="panel">
+<input id="search" placeholder="Search team investments..." oninput="render()">
+<button class="refresh" onclick="loadData()">Refresh</button>
+<p class="muted" id="msg">Connecting...</p>
+</div>
+
+<div class="panel tablewrap"><table>
+<thead><tr><th>ID</th><th>User ID</th><th>Member</th><th>Leader ID</th><th>Team</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+<tbody id="body"></tbody></table></div>
+</main>
+<script>
+const db=window.supabase.createClient(
+"https://zwffgoenruzcctkyptjg.supabase.co",
+"sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar"
+);
+let records=[];
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+async function loadData(){
+msg.textContent="Loading...";
+let {data,error}=await db.from("team_investments").select("*").order("created_at",{ascending:false});
+if(error){msg.textContent="Error: "+error.message;return;}
+records=data||[];
+total.textContent=records.length;
+amount.textContent=records.reduce((s,r)=>s+Number(r.investment_amount||0),0).toLocaleString();
+activeCount.textContent=records.filter(r=>r.status==="active").length;
+msg.textContent=records.length+" records found.";render();
+}
+async function addInvestment(){
+let payload={
+ user_id:uid.value.trim(),
+ member_name:name.value.trim(),
+ team_leader_id:leader.value.trim(),
+ team_name:team.value.trim(),
+ investment_amount:Number(invested.value||0),
+ status:status.value
+};
+if(!payload.member_name){alert("Member name is required.");return;}
+if(payload.investment_amount<0){alert("Amount cannot be negative.");return;}
+let {error}=await db.from("team_investments").insert(payload);
+if(error){alert(error.message);return;}
+uid.value=name.value=leader.value=team.value=invested.value="";
+alert("Team investment added.");loadData();
+}
+function render(){
+let q=search.value.toLowerCase();
+let list=records.filter(r=>JSON.stringify(r).toLowerCase().includes(q));
+if(!list.length){body.innerHTML='<tr><td colspan="9">No investment records found.</td></tr>';return;}
+body.innerHTML=list.map(r=>`<tr>
+<td>${esc(r.id)}</td><td>${esc(r.user_id)}</td><td>${esc(r.member_name)}</td>
+<td>${esc(r.team_leader_id)}</td><td>${esc(r.team_name)}</td>
+<td>${Number(r.investment_amount||0).toLocaleString()}</td><td>${esc(r.status)}</td>
+<td>${r.created_at?new Date(r.created_at).toLocaleDateString():"—"}</td>
+<td><button class="${r.status==="active"?"inactive":"active"}" onclick="toggleStatus(${Number(r.id)},'${r.status==="active"?"inactive":"active"}')">${r.status==="active"?"Deactivate":"Activate"}</button>
+<button class="del" onclick="removeRow(${Number(r.id)})">Delete</button></td></tr>`).join("");
+}
+async function toggleStatus(id,status){
+let {error}=await db.from("team_investments").update({status}).eq("id",id);
+if(error){alert(error.message);return;}loadData();
+}
+async function removeRow(id){
+if(!confirm("Delete this investment record?"))return;
+let {error}=await db.from("team_investments").delete().eq("id",id);
+if(error){alert(error.message);return;}loadData();
+}
+loadData();
+</script></body></html>

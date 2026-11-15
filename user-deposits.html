@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio - User Deposits</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f4f6fb;color:#243047}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:245px;background:#172238;color:white;padding:25px 16px;flex-shrink:0}
+.brand{font-size:24px;font-weight:bold;color:#54dfb1;margin-bottom:8px}
+.subtitle{font-size:12px;color:#aebbd0;margin-bottom:30px}
+.sidebar a{display:block;color:#dce4f0;text-decoration:none;padding:12px 13px;border-radius:8px;margin-bottom:5px;font-size:14px}
+.sidebar a:hover,.sidebar a.active{background:#293951;color:#54dfb1}
+main{flex:1;padding:28px;min-width:0}
+.top{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:25px}
+h1{font-size:27px;margin-bottom:7px}
+.muted{color:#78849a;font-size:14px}
+button{border:0;border-radius:7px;padding:10px 13px;cursor:pointer;font-weight:bold}
+button:disabled{opacity:.55;cursor:not-allowed}
+.primary{background:#54dfb1;color:#172238}
+.danger{background:#ffe4e4;color:#b42323}
+.neutral{background:#e9edf5;color:#34415a}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:22px}
+.card,.panel{background:white;border-radius:12px;padding:20px;box-shadow:0 3px 15px #1722380a}
+.card p{color:#78849a;font-size:13px;margin-bottom:12px}
+.card h2{font-size:25px;overflow-wrap:anywhere}
+.panel{margin-bottom:20px}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+input,select{padding:11px;border:1px solid #dce2ec;border-radius:7px;background:white;min-width:160px;max-width:100%}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:760px}
+th,td{text-align:left;padding:14px 12px;border-bottom:1px solid #edf0f5;font-size:13px}
+th{background:#f8f9fc;color:#68758c}
+.status{display:inline-block;padding:6px 9px;border-radius:20px;font-size:11px;font-weight:bold}
+.Pending{background:#fff0cc;color:#926300}
+.Approved{background:#d8f8e9;color:#16784e}
+.Rejected{background:#ffe0e0;color:#ad2929}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.empty{text-align:center;padding:25px;color:#78849a}
+.notice{padding:12px 14px;border-radius:8px;margin-bottom:16px;font-size:14px;display:none;overflow-wrap:anywhere}
+.notice.error{display:block;background:#ffe4e4;color:#a52222}
+.notice.success{display:block;background:#d8f8e9;color:#16784e}
+.notice.info{display:block;background:#e7efff;color:#294c88}
+@media(max-width:800px){
+.layout{display:block}
+.sidebar{width:100%;padding:18px}
+.sidebar nav{display:flex;gap:5px;overflow-x:auto}
+.sidebar a{white-space:nowrap}
+main{padding:18px}
+.cards{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+<div class="brand">Capitaxio</div>
+<div class="subtitle">ADMINISTRATION PANEL</div>
+<nav>
+<a href="admin.html">Dashboard</a>
+<a href="manage-users.html">Manage Users</a>
+<a href="active-users.html">Active Users</a>
+<a href="user-profile.html">User Profiles</a>
+<a href="user-transactions.html">User Transactions</a>
+<a href="deposits.html">All Deposits</a>
+<a href="user-deposits.html" class="active">User Deposits</a>
+<a href="withdrawals.html">Withdrawals</a>
+<a href="kyc-pending.html">Pending KYC</a>
+<a href="reports-analytics.html">Reports & Analytics</a>
+<a href="system-configuration.html">System Configuration</a>
+<a href="admin-login.html" id="logoutLink">Logout</a>
+</nav>
+</aside>
+
+<main>
+<div class="top">
+<div>
+<h1>User Deposits</h1>
+<p class="muted">View and manage user deposit requests.</p>
+</div>
+<button class="primary" id="refreshBtn" onclick="loadDeposits()">Refresh Records</button>
+</div>
+
+<div id="notice" class="notice" role="status"></div>
+
+<section class="cards">
+<div class="card"><p>Total Deposits</p><h2 id="total">0</h2></div>
+<div class="card"><p>Pending Requests</p><h2 id="pending">0</h2></div>
+<div class="card"><p>Approved Amount</p><h2 id="approvedAmount">Rs. 0</h2></div>
+</section>
+
+<section class="panel">
+<h3>Deposit Records</h3>
+<div class="tools">
+<input id="search" placeholder="Search name, email or ID..." oninput="render()">
+<select id="filter" onchange="render()">
+<option value="All">All Statuses</option>
+<option value="Pending">Pending</option>
+<option value="Approved">Approved</option>
+<option value="Rejected">Rejected</option>
+</select>
+<button class="neutral" onclick="exportCSV()">Export CSV</button>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Deposit ID</th><th>User Name</th><th>Email / Mobile</th>
+<th>Amount</th><th>Method</th><th>Date</th><th>Status</th><th>Actions</th>
+</tr>
+</thead>
+<tbody id="rows">
+<tr><td colspan="8" class="empty">Loading deposit records...</td></tr>
+</tbody>
+</table>
+</div>
+<p class="muted" style="margin-top:14px">Records are loaded from the Supabase database.</p>
+</section>
+</main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL="https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY="sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const TABLE="deposits";
+const ID_COL="id";
+const USER_ID_COL="user_id";
+const AMOUNT_COL="amount";
+const METHOD_COL="method";
+const STATUS_COL="status";
+const DATE_COL="created_at";
+
+let deposits=[];
+let busy=false;
+
+function safe(v){
+return String(v??"").replace(/[&<>"']/g,c=>({
+"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+})[c]);
+}
+function money(v){
+return "Rs. "+Number(v||0).toLocaleString("en-PK",{maximumFractionDigits:2});
+}
+function notice(msg,type="info"){
+const el=document.getElementById("notice");
+el.textContent=msg;
+el.className="notice "+type;
+}
+function clearNotice(){
+const el=document.getElementById("notice");
+el.textContent="";
+el.className="notice";
+}
+function statusOf(d){
+const s=String(d[STATUS_COL]||"Pending").toLowerCase();
+if(s==="approved")return "Approved";
+if(s==="rejected")return "Rejected";
+if(s==="pending")return "Pending";
+return String(d[STATUS_COL]||"Pending");
+}
+function userName(d){
+const u=d.users||{};
+return d.user_name||d.full_name||d.name||u.full_name||u.name||d[USER_ID_COL]||"Unknown user";
+}
+function contact(d){
+const u=d.users||{};
+return d.email||d.mobile||d.contact||u.email||u.mobile||"-";
+}
+function dateOf(d){
+const v=d[DATE_COL]||d.date;
+if(!v)return "-";
+const date=new Date(v);
+return Number.isNaN(date.getTime())?String(v):date.toLocaleDateString("en-GB");
+}
+function render(){
+const q=document.getElementById("search").value.trim().toLowerCase();
+const f=document.getElementById("filter").value;
+
+document.getElementById("total").textContent=deposits.length;
+document.getElementById("pending").textContent=
+deposits.filter(d=>statusOf(d)==="Pending").length;
+const approved=deposits.filter(d=>statusOf(d)==="Approved")
+.reduce((sum,d)=>sum+Number(d[AMOUNT_COL]||0),0);
+document.getElementById("approvedAmount").textContent=money(approved);
+
+const list=deposits.filter(d=>{
+const s=statusOf(d);
+const hay=[d[ID_COL],userName(d),contact(d),d[USER_ID_COL],d[METHOD_COL],dateOf(d),s].join(" ").toLowerCase();
+return hay.includes(q)&&(f==="All"||s===f);
+});
+
+document.getElementById("rows").innerHTML=list.length?list.map(d=>{
+const id=d[ID_COL],s=statusOf(d);
+return `<tr>
+<td>${safe(id)}</td>
+<td>${safe(userName(d))}</td>
+<td>${safe(contact(d))}</td>
+<td>${money(d[AMOUNT_COL])}</td>
+<td>${safe(d[METHOD_COL]||"-")}</td>
+<td>${safe(dateOf(d))}</td>
+<td><span class="status ${safe(s)}">${safe(s)}</span></td>
+<td><div class="actions">
+${s==="Pending"?`
+<button class="primary" data-action="approve" data-id="${safe(id)}">Approve</button>
+<button class="danger" data-action="reject" data-id="${safe(id)}">Reject</button>`:""}
+<button class="neutral" data-action="delete" data-id="${safe(id)}">Delete</button>
+</div></td></tr>`;
+}).join(""):`<tr><td colspan="8" class="empty">No deposit records found.</td></tr>`;
+}
+
+async function loadDeposits(){
+if(busy)return;
+busy=true;
+clearNotice();
+const btn=document.getElementById("refreshBtn");
+btn.disabled=true;
+btn.textContent="Loading...";
+
+try{
+const {data,error}=await db.from(TABLE).select("*").order(DATE_COL,{ascending:false});
+if(error)throw error;
+deposits=data||[];
+await attachUsers();
+render();
+notice("Deposit records loaded from Supabase.","success");
+}catch(e){
+deposits=[];
+render();
+notice("Records load nahi huay: "+(e.message||"Check table names and RLS policies."),"error");
+}finally{
+busy=false;
+btn.disabled=false;
+btn.textContent="Refresh Records";
+}
+}
+
+async function attachUsers(){
+const ids=[...new Set(deposits.filter(d=>d[USER_ID_COL]).map(d=>d[USER_ID_COL]))];
+const needsLookup=deposits.some(d=>!d.user_name&&!d.full_name&&!d.name&&!d.email&&!d.mobile&&!d.contact&&d[USER_ID_COL]);
+if(!needsLookup||!ids.length)return;
+
+const {data,error}=await db.from("users").select("*").in("id",ids);
+if(error)return;
+const map=new Map((data||[]).map(u=>[String(u.id),u]));
+deposits=deposits.map(d=>({...d,users:map.get(String(d[USER_ID_COL]))||null}));
+}
+
+async function changeStatus(id,newStatus){
+if(busy)return;
+const d=deposits.find(x=>String(x[ID_COL])===String(id));
+if(!d)return notice("Deposit record nahi mila.","error");
+if(statusOf(d)!=="Pending")return notice("Sirf Pending deposit ka status change ho sakta hai.","error");
+if(!confirm("Is deposit ko "+newStatus+" karna hai?"))return;
+
+busy=true;
+clearNotice();
+try{
+const {data,error}=await db.from(TABLE)
+.update({[STATUS_COL]:newStatus})
+.eq(ID_COL,d[ID_COL])
+.eq(STATUS_COL,d[STATUS_COL])
+.select();
+if(error)throw error;
+if(!data||!data.length)throw new Error("Update nahi hui. RLS policy aur current status check karein.");
+notice("Deposit status updated: "+newStatus,"success");
+await reloadData();
+}catch(e){
+notice("Status update nahi hua: "+(e.message||"Unknown error"),"error");
+}finally{
+busy=false;
+render();
+}
+}
+
+async function removeDeposit(id){
+if(busy)return;
+const d=deposits.find(x=>String(x[ID_COL])===String(id));
+if(!d)return notice("Deposit record nahi mila.","error");
+if(!confirm("Kya is deposit record ko permanently delete karna hai?"))return;
+
+busy=true;
+clearNotice();
+try{
+const {data,error}=await db.from(TABLE).delete().eq(ID_COL,d[ID_COL]).select();
+if(error)throw error;
+if(!data||!data.length)throw new Error("Delete nahi hui. RLS policy check karein.");
+notice("Deposit record deleted.","success");
+await reloadData();
+}catch(e){
+notice("Delete nahi hua: "+(e.message||"Unknown error"),"error");
+}finally{
+busy=false;
+render();
+}
+}
+
+async function reloadData(){
+const {data,error}=await db.from(TABLE).select("*").order(DATE_COL,{ascending:false});
+if(error)throw error;
+deposits=data||[];
+await attachUsers();
+}
+
+function exportCSV(){
+if(!deposits.length)return notice("Export ke liye records nahi hain.","info");
+const headers=["Deposit ID","User Name","Contact","User ID","Amount","Method","Date","Status"];
+const rows=deposits.map(d=>[d[ID_COL],userName(d),contact(d),d[USER_ID_COL],d[AMOUNT_COL],d[METHOD_COL],dateOf(d),statusOf(d)]);
+const csv=[headers,...rows].map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\n");
+const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
+const url=URL.createObjectURL(blob);
+const a=document.createElement("a");
+a.href=url;a.download="capitaxio-user-deposits.csv";a.click();
+setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+document.getElementById("rows").addEventListener("click",async e=>{
+const b=e.target.closest("button[data-action]");
+if(!b||busy)return;
+if(b.dataset.action==="approve")await changeStatus(b.dataset.id,"Approved");
+if(b.dataset.action==="reject")await changeStatus(b.dataset.id,"Rejected");
+if(b.dataset.action==="delete")await removeDeposit(b.dataset.id);
+});
+
+document.getElementById("logoutLink").addEventListener("click",async e=>{
+e.preventDefault();
+const {error}=await db.auth.signOut();
+if(error)return notice("Logout issue: "+error.message,"error");
+location.href="admin-login.html";
+});
+
+loadDeposits();
+</script>
+</body>
+</html>

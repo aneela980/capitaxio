@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Backup | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:#f4f6fc;color:#202943;padding:26px}
+h1{font-size:24px;margin-bottom:8px}.sub{color:#858ba1;font-size:13px;line-height:1.7;max-width:680px;margin-bottom:20px}
+.warn{background:#fff7e5;color:#775516;border:1px solid #f2dfae;border-radius:10px;padding:14px;font-size:13px;line-height:1.7;margin-bottom:20px;max-width:760px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:760px}
+.card{background:#fff;border-radius:13px;padding:18px;box-shadow:0 4px 20px #1b28500a;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.card b{display:block;font-size:15px;margin-bottom:5px}.card small{color:#858ba1;font-size:12px}
+button{border:none;border-radius:8px;padding:10px 14px;font-weight:bold;cursor:pointer;background:#7058dc;color:#fff;font-size:13px}
+button:disabled{opacity:.6;cursor:not-allowed}
+.msg{margin-top:18px;padding:12px 14px;border-radius:9px;font-size:13px;display:none;max-width:760px}
+.msg.show{display:block}.msg.ok{background:#e0f8ed;color:#168354}.msg.err{background:#ffe5e8;color:#c6374b}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body style="visibility:hidden">
+<h1>Backup (Export)</h1>
+<p class="sub">Yahan se tables ki nakal CSV file mein download ho jati hai (Excel mein khul jati hai). Ye aap ka apna alag mehfooz record hai.</p>
+<div class="warn"><strong>Dhyan rakhein:</strong> in files mein users ka naam, email aur phone hota hai. Inhein kisi ke saath share na karein aur mehfooz jagah rakhein. KYC ke CNIC aur tasveeren is mein shamil nahi hain.
+Wapas bahal karna (restore) yahan se nahi hota. Asli bachao ke liye Supabase mein <b>Database, phir Backups</b> dekhein.</div>
+<div class="grid" id="list"></div>
+<div class="msg" id="msg"></div>
+
+<script>
+const db = window.supabase.createClient("https://zwffgoenruzcctkyptjg.supabase.co", "sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar");
+
+const TABLES = [
+  ["users", "Users", "Naam, email, mobile, balance, status"],
+  ["deposits", "Deposits", "Saari deposit requests"],
+  ["withdrawals", "Withdrawals", "Saari withdrawal requests"],
+  ["transactions", "Transactions", "Hisaab ki entries"],
+  ["referrals", "Referrals", "Referral records"],
+  ["task_completions", "Task Completions", "Tasks ka inaam record"],
+  ["spin_log", "Spin Log", "Spin ke nateeje"],
+  ["notices", "Notices", "Notice board"]
+];
+
+function show(text, ok) {
+  const m = document.getElementById("msg");
+  m.textContent = text; m.className = "msg show " + (ok ? "ok" : "err");
+}
+
+// Excel mein formula ban jane se bachao
+function cell(v) {
+  if (v === null || v === undefined) return "";
+  let t = typeof v === "object" ? JSON.stringify(v) : String(v);
+  if (/^[=+\-@\t\r]/.test(t)) t = "'" + t;
+  return '"' + t.replace(/"/g, '""') + '"';
+}
+
+async function exportTable(table, btn) {
+  btn.disabled = true;
+  const old = btn.textContent; btn.textContent = "Ho raha hai...";
+  show("", true); document.getElementById("msg").className = "msg";
+
+  let rows = [], from = 0;
+  const size = 1000;
+  while (from < 20000) {
+    const r = await db.from(table).select("*").range(from, from + size - 1);
+    if (r.error) { show(table + " nahi nikal saka: " + r.error.message, false); btn.disabled = false; btn.textContent = old; return; }
+    rows = rows.concat(r.data || []);
+    if (!r.data || r.data.length < size) break;
+    from += size;
+  }
+
+  if (!rows.length) { show(table + " mein abhi koi record nahi.", false); btn.disabled = false; btn.textContent = old; return; }
+
+  const cols = Object.keys(rows[0]);
+  const csv = [cols.map(cell).join(",")].concat(rows.map(function (r) { return cols.map(function (c) { return cell(r[c]); }).join(","); })).join("\r\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = table + "-" + new Date().toISOString().slice(0, 10) + ".csv";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+
+  show(rows.length + " records ki file download ho gayi (" + table + ").", true);
+  btn.disabled = false; btn.textContent = old;
+}
+
+function build() {
+  const list = document.getElementById("list");
+  TABLES.forEach(function (t) {
+    const card = document.createElement("div"); card.className = "card";
+    const left = document.createElement("div");
+    const b = document.createElement("b"); b.textContent = t[1];
+    const s = document.createElement("small"); s.textContent = t[2];
+    left.appendChild(b); left.appendChild(s);
+    const btn = document.createElement("button"); btn.type = "button"; btn.textContent = "Download CSV";
+    btn.addEventListener("click", function () { exportTable(t[0], btn); });
+    card.appendChild(left); card.appendChild(btn);
+    list.appendChild(card);
+  });
+}
+
+(async function () {
+  const s = (await db.auth.getSession()).data;
+  if (!s.session) { location.replace("admin-login.html"); return; }
+  const a = (await db.from("admins").select("id").eq("user_id", s.session.user.id).eq("is_active", true).maybeSingle()).data;
+  if (!a) { await db.auth.signOut(); location.replace("admin-login.html"); return; }
+  document.body.style.visibility = "visible";
+  build();
+})();
+</script>
+</body>
+</html>

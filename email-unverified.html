@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio - Email Unverified Users</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f4f6fb;color:#20283a}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:235px;background:#172238;color:white;padding:23px 14px;flex-shrink:0}
+.brand{font-size:25px;font-weight:bold;color:#54dfb1;margin:0 10px 8px}
+.sub{font-size:11px;color:#aebbd0;margin:0 10px 25px;letter-spacing:2px}
+.sidebar a{display:block;padding:12px 14px;color:#d5ddec;text-decoration:none;border-radius:8px;margin:5px 0;font-size:14px}
+.sidebar a:hover,.sidebar a.active{background:#29405e;color:#54dfb1}
+.main{flex:1;min-width:0;padding:28px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:25px}
+h1{font-size:27px;margin-bottom:7px}
+.muted{color:#7e899e;font-size:13px;line-height:1.6}
+.admin{background:white;padding:11px 16px;border-radius:10px;font-size:13px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:22px}
+.card{background:white;padding:21px;border-radius:13px;box-shadow:0 3px 15px #192b4710}
+.card p{font-size:13px;color:#7e899e;margin-bottom:12px}
+.card h2{font-size:27px}
+.orange{color:#d78b19}.green{color:#149d78}.red{color:#e34f66}
+.panel{background:white;border-radius:13px;padding:22px;box-shadow:0 3px 15px #192b4710}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.panel h3{font-size:18px}
+.controls{display:flex;gap:9px;flex-wrap:wrap}
+input,select{padding:11px 12px;border:1px solid #dfe4ee;border-radius:8px;font-size:13px;outline:none;background:white}
+input{min-width:210px}
+button{border:0;border-radius:7px;padding:10px 12px;cursor:pointer;font-weight:600;font-size:12px}
+button:disabled{opacity:.6;cursor:not-allowed}
+.btn-green{background:#d9f8ed;color:#087b5d}
+.btn-orange{background:#fff0d3;color:#95600c}
+.btn-dark{background:#263751;color:white}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:700px}
+th,td{text-align:left;padding:14px 12px;border-bottom:1px solid #edf0f5;font-size:13px}
+th{color:#7e899e;font-size:11px;text-transform:uppercase;letter-spacing:.5px;background:#fafbfe}
+.pill{display:inline-block;padding:5px 9px;border-radius:20px;background:#fff0d3;color:#95600c;font-size:11px}
+.empty{text-align:center;padding:30px;color:#8791a3}
+.footer{font-size:12px;color:#8a94a7;margin-top:20px;text-align:center}
+.message{font-size:13px;margin-bottom:15px;line-height:1.6;overflow-wrap:anywhere}
+.success{color:#149d78}.error{color:#bd2941}
+@media(max-width:850px){.sidebar{width:190px}.main{padding:18px}.cards{grid-template-columns:1fr}}
+@media(max-width:560px){.layout{display:block}.sidebar{width:100%;padding:15px}.sidebar a{display:inline-block;padding:9px}.sub{margin-bottom:10px}.main{padding:14px}.panel{padding:14px}h1{font-size:23px}}
+</style>
+</head>
+
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="brand">Capitaxio</div>
+  <div class="sub">ADMIN PANEL</div>
+  <a href="admin.html">Dashboard</a>
+  <a href="manage-users.html">Manage Users</a>
+  <a href="active-users.html">Active Users</a>
+  <a href="banned-users.html">Banned Users</a>
+  <a class="active" href="email-unverified.html">Email Unverified</a>
+  <a href="mobile-unverified.html">Mobile Unverified</a>
+  <a href="user-verification.html">User Verification</a>
+  <a href="kyc-settings.html">KYC Settings</a>
+  <a href="deposits.html">Deposits</a>
+  <a href="withdrawals.html">Withdrawals</a>
+  <a href="system-configuration.html">System Configuration</a>
+  <a href="admin-login.html" id="logoutLink">Logout</a>
+</aside>
+
+<main class="main">
+  <div class="top">
+    <div>
+      <h1>Email Unverified Users</h1>
+      <p class="muted">Review accounts whose email addresses have not yet been verified.</p>
+    </div>
+    <div class="admin">🛡️ Administrator</div>
+  </div>
+
+  <p id="message" class="message" role="status" aria-live="polite"></p>
+
+  <div class="cards">
+    <div class="card"><p>Total Listed Users</p><h2 id="total">0</h2></div>
+    <div class="card"><p>Email Pending</p><h2 class="orange" id="pending">0</h2></div>
+    <div class="card"><p>Email Verified</p><h2 class="green" id="verified">0</h2></div>
+  </div>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div>
+        <h3>Email Verification List</h3>
+        <p class="muted" style="margin-top:7px">View verification status stored in your database.</p>
+      </div>
+      <div class="controls">
+        <input id="search" placeholder="Search name, email or ID..." aria-label="Search users">
+        <select id="filter" aria-label="Filter users">
+          <option value="all">All Users</option>
+          <option value="pending">Unverified</option>
+          <option value="verified">Verified</option>
+        </select>
+        <button class="btn-dark" id="refreshBtn" type="button">Refresh</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>User ID</th><th>Name</th><th>Email</th>
+            <th>Joined Date</th><th>Status</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="rows">
+          <tr><td colspan="6" class="empty">Loading users...</td></tr>
+        </tbody>
+      </table>
+      <div class="empty" id="empty" style="display:none">No matching users found.</div>
+    </div>
+  </section>
+
+  <div class="footer">Capitaxio Admin Panel · Email Verification</div>
+</main>
+</div>
+
+<script>
+const SUPABASE_URL = "https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+
+const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let users = [];
+let busy = false;
+
+const $ = id => document.getElementById(id);
+
+function showMessage(text,type=""){
+  $("message").textContent = text;
+  $("message").className = "message " + type;
+}
+
+function escapeHTML(value){
+  return String(value ?? "").replace(/[&<>"']/g,ch=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[ch]));
+}
+
+function getName(u){
+  return u.full_name ?? u.name ?? u.username ?? u.first_name ?? u.email ?? "Unnamed user";
+}
+function getEmail(u){
+  return u.email ?? "";
+}
+function getJoined(u){
+  const value = u.created_at ?? u.joined_at ?? "";
+  if(!value) return "—";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString();
+}
+
+/*
+  This page assumes the public users table contains:
+  id, full_name/name, email, created_at, email_verified.
+
+  If your schema uses a different verification column, update
+  EMAIL_VERIFIED_COLUMN and the mapping below.
+
+  IMPORTANT: Auth email verification is stored in Supabase Auth.
+  A public users-table flag is not automatically the same thing.
+*/
+const EMAIL_VERIFIED_COLUMN = "email_verified";
+
+function isVerified(u){
+  const value = u[EMAIL_VERIFIED_COLUMN];
+
+  if(value === true) return true;
+  if(value === false || value === null) return false;
+
+  if(typeof value === "string"){
+    return ["true","verified","yes","1"].includes(value.toLowerCase().trim());
+  }
+
+  return false;
+}
+
+async function loadUsers(){
+  if(busy) return;
+  busy = true;
+  $("refreshBtn").disabled = true;
+  showMessage("Loading email verification records from Supabase...");
+
+  try{
+    const {data,error} = await client
+      .from("users")
+      .select("*")
+      .order("created_at",{ascending:false});
+
+    if(error) throw error;
+
+    users = Array.isArray(data) ? data : [];
+    render();
+    showMessage("User records loaded from Supabase.","success");
+  }catch(error){
+    users = [];
+    render();
+    showMessage(
+      "Could not load records: " + error.message +
+      ". Check your users table, column names and RLS policies.",
+      "error"
+    );
+  }finally{
+    busy = false;
+    $("refreshBtn").disabled = false;
+  }
+}
+
+function render(){
+  const query = $("search").value.toLowerCase().trim();
+  const filter = $("filter").value;
+
+  $("total").textContent = users.length;
+  $("pending").textContent = users.filter(u=>!isVerified(u)).length;
+  $("verified").textContent = users.filter(isVerified).length;
+
+  const result = users.filter(u=>{
+    const searchable = [
+      u.id ?? "",
+      getName(u),
+      getEmail(u)
+    ].join(" ").toLowerCase();
+
+    const status = isVerified(u) ? "verified" : "pending";
+    return searchable.includes(query) &&
+      (filter === "all" || status === filter);
+  });
+
+  $("rows").innerHTML = result.map(u=>{
+    const verified = isVerified(u);
+    const statusText = verified ? "Verified" : "Unverified";
+    const statusStyle = verified
+      ? "background:#d9f8ed;color:#087b5d"
+      : "";
+
+    return `
+      <tr>
+        <td>${escapeHTML(u.id ?? "—")}</td>
+        <td>${escapeHTML(getName(u))}</td>
+        <td>${escapeHTML(getEmail(u) || "—")}</td>
+        <td>${escapeHTML(getJoined(u))}</td>
+        <td>
+          <span class="pill" style="${statusStyle}">
+            ${statusText}
+          </span>
+        </td>
+        <td>
+          <button class="btn-dark" disabled
+            title="Verification should be performed through the actual account verification process">
+            View Status
+          </button>
+        </td>
+      </tr>`;
+  }).join("");
+
+  $("empty").style.display = result.length ? "none" : "block";
+}
+
+async function logout(){
+  try{
+    const {error} = await client.auth.signOut();
+    if(error) console.error("Logout error:",error.message);
+  }catch(error){
+    console.error("Logout error:",error.message);
+  }
+}
+
+$("search").addEventListener("input",render);
+$("filter").addEventListener("change",render);
+$("refreshBtn").addEventListener("click",loadUsers);
+$("logoutLink").addEventListener("click",logout);
+
+loadUsers();
+</script>
+</body>
+</html>

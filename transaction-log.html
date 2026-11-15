@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio - Transaction Log</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f4f6fb;color:#253149}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:245px;flex-shrink:0;background:#172238;color:white;padding:23px 15px}
+.brand{font-size:25px;font-weight:bold;color:#54dfb1;margin-bottom:8px}
+.sub{font-size:11px;color:#aebbd0;margin-bottom:25px}
+.sidebar a{display:block;padding:12px;border-radius:7px;text-decoration:none;color:#dce4f0;font-size:14px;margin:4px 0}
+.sidebar a:hover,.sidebar a.active{background:#293951;color:#54dfb1}
+main{flex:1;min-width:0;padding:28px}
+.header{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:24px}
+h1{font-size:27px;margin-bottom:7px}
+.muted{color:#7b879b;font-size:13px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-bottom:20px}
+.card,.panel{background:white;padding:20px;border-radius:12px;box-shadow:0 3px 15px #1722380a}
+.card p{font-size:13px;color:#7b879b;margin-bottom:12px}
+.card h2{font-size:24px;overflow-wrap:anywhere}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+input,select{padding:11px;border:1px solid #dce2ec;border-radius:7px;max-width:100%;background:white}
+button{border:0;border-radius:7px;padding:10px 12px;cursor:pointer;font-weight:bold}
+.primary{background:#54dfb1;color:#172238}
+.neutral{background:#e9edf5;color:#34415a}
+.danger{background:#ffe2e2;color:#ad2929}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:850px}
+th,td{text-align:left;padding:13px 11px;border-bottom:1px solid #edf0f5;font-size:13px}
+th{background:#f8f9fc;color:#69758b}
+.status{display:inline-block;padding:6px 9px;border-radius:20px;font-size:11px;font-weight:bold}
+.Completed{background:#d8f8e9;color:#16784e}
+.Pending{background:#fff0cc;color:#926300}
+.Failed{background:#ffe0e0;color:#ad2929}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.empty{text-align:center;padding:25px;color:#7b879b}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:18px}
+.field label{display:block;font-size:13px;margin-bottom:7px;font-weight:bold}
+.field input,.field select{width:100%}
+.form-actions{display:flex;gap:10px;margin-top:16px}
+@media(max-width:800px){
+.layout{display:block}.sidebar{width:100%}
+.sidebar nav{display:flex;overflow-x:auto;gap:5px}
+.sidebar a{white-space:nowrap}
+main{padding:16px}.cards{grid-template-columns:1fr}
+.form-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+<div class="brand">Capitaxio</div>
+<div class="sub">ADMINISTRATION PANEL</div>
+<nav>
+<a href="admin.html">Dashboard</a>
+<a href="manage-users.html">Manage Users</a>
+<a href="user-transactions.html">User Transactions</a>
+<a href="deposits.html">Deposits</a>
+<a href="withdrawals.html">Withdrawals</a>
+<a href="all-withdrawals.html">All Withdrawals</a>
+<a href="withdrawal-proof.html">Withdrawal Proof</a>
+<a href="transaction-log.html" class="active">Transaction Log</a>
+<a href="admin-activity-logs.html">Admin Activity Logs</a>
+<a href="reports-analytics.html">Reports & Analytics</a>
+<a href="system-configuration.html">System Configuration</a>
+<a href="admin-login.html">Logout</a>
+</nav>
+</aside>
+
+<main>
+<div class="header">
+<div>
+<h1>Transaction Log</h1>
+<p class="muted">View, search and export transaction records.</p>
+</div>
+<button class="primary" onclick="showForm()">+ Add Record</button>
+</div>
+
+<section class="cards">
+<div class="card"><p>Total Records</p><h2 id="total">0</h2></div>
+<div class="card"><p>Completed Transactions</p><h2 id="completed">0</h2></div>
+<div class="card"><p>Total Transaction Amount</p><h2 id="amount">Rs. 0</h2></div>
+</section>
+
+<section class="panel" id="formPanel" style="display:none;margin-bottom:20px">
+<h3>Add Transaction Record</h3>
+<form id="recordForm">
+<div class="form-grid">
+<div class="field">
+<label for="user">User Name</label>
+<input id="user" required placeholder="Enter user name">
+</div>
+<div class="field">
+<label for="type">Transaction Type</label>
+<select id="type" required>
+<option value="Deposit">Deposit</option>
+<option value="Withdrawal">Withdrawal</option>
+<option value="Investment">Investment</option>
+<option value="Reward">Reward</option>
+<option value="Transfer">Transfer</option>
+</select>
+</div>
+<div class="field">
+<label for="amountInput">Amount (Rs.)</label>
+<input id="amountInput" type="number" min="0.01" step="0.01" required placeholder="Enter amount">
+</div>
+<div class="field">
+<label for="statusInput">Status</label>
+<select id="statusInput">
+<option value="Completed">Completed</option>
+<option value="Pending">Pending</option>
+<option value="Failed">Failed</option>
+</select>
+</div>
+<div class="field">
+<label for="reference">Reference / Transaction ID</label>
+<input id="reference" placeholder="Optional reference">
+</div>
+<div class="field">
+<label for="dateInput">Date</label>
+<input id="dateInput" type="date" required>
+</div>
+</div>
+<div class="form-actions">
+<button class="primary" type="submit">Save Record</button>
+<button class="neutral" type="button" onclick="hideForm()">Cancel</button>
+</div>
+</form>
+</section>
+
+<section class="panel">
+<h3>All Transactions</h3>
+<div class="tools">
+<input id="search" placeholder="Search user or transaction ID" oninput="render()">
+<select id="typeFilter" onchange="render()">
+<option value="All">All Types</option>
+<option value="Deposit">Deposit</option>
+<option value="Withdrawal">Withdrawal</option>
+<option value="Investment">Investment</option>
+<option value="Reward">Reward</option>
+<option value="Transfer">Transfer</option>
+</select>
+<select id="statusFilter" onchange="render()">
+<option value="All">All Statuses</option>
+<option value="Completed">Completed</option>
+<option value="Pending">Pending</option>
+<option value="Failed">Failed</option>
+</select>
+<button class="neutral" onclick="exportCSV()">Export CSV</button>
+</div>
+<div class="table-wrap">
+<table>
+<thead><tr>
+<th>Transaction ID</th><th>User</th><th>Type</th><th>Amount</th><th>Date</th><th>Status</th><th>Actions</th>
+</tr></thead>
+<tbody id="rows"></tbody>
+</table>
+</div>
+<p class="muted" style="margin-top:14px">Demo records are stored in this browser only.</p>
+</section>
+</main>
+</div>
+
+<script>
+const KEY="capitaxio_transaction_log_v1";
+
+function loadRecords(){
+  try{return JSON.parse(localStorage.getItem(KEY))||[]}
+  catch(e){return []}
+}
+let records=loadRecords();
+
+function esc(v){
+  return String(v??"").replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[c]);
+}
+function money(v){
+  return "Rs. "+Number(v||0).toLocaleString("en-PK",{maximumFractionDigits:2});
+}
+function save(){
+  localStorage.setItem(KEY,JSON.stringify(records));
+  render();
+}
+function showForm(){
+  document.getElementById("formPanel").style.display="block";
+  document.getElementById("formPanel").scrollIntoView({behavior:"smooth"});
+}
+function hideForm(){
+  document.getElementById("formPanel").style.display="none";
+}
+
+document.getElementById("dateInput").value=new Date().toISOString().slice(0,10);
+
+document.getElementById("recordForm").addEventListener("submit",function(e){
+  e.preventDefault();
+
+  const amount=Number(document.getElementById("amountInput").value);
+  if(!Number.isFinite(amount)||amount<=0){
+    alert("Please enter a valid amount.");
+    return;
+  }
+
+  records.unshift({
+    id:"TXN-"+Date.now(),
+    user:document.getElementById("user").value.trim(),
+    type:document.getElementById("type").value,
+    amount,
+    status:document.getElementById("statusInput").value,
+    reference:document.getElementById("reference").value.trim(),
+    date:document.getElementById("dateInput").value
+  });
+
+  save();
+  this.reset();
+  document.getElementById("dateInput").value=new Date().toISOString().slice(0,10);
+  hideForm();
+});
+
+function render(){
+  const q=document.getElementById("search").value.toLowerCase();
+  const type=document.getElementById("typeFilter").value;
+  const status=document.getElementById("statusFilter").value;
+
+  const list=records.filter(r=>
+    [r.id,r.user,r.reference].join(" ").toLowerCase().includes(q)&&
+    (type==="All"||r.type===type)&&
+    (status==="All"||r.status===status)
+  );
+
+  document.getElementById("total").textContent=list.length;
+  document.getElementById("completed").textContent=
+    list.filter(r=>r.status==="Completed").length;
+  document.getElementById("amount").textContent=
+    money(list.reduce((sum,r)=>sum+Number(r.amount||0),0));
+
+  document.getElementById("rows").innerHTML=list.length?list.map(r=>`
+    <tr>
+      <td>${esc(r.id)}</td>
+      <td>${esc(r.user)}</td>
+      <td>${esc(r.type)}</td>
+      <td>${money(r.amount)}</td>
+      <td>${esc(r.date)}</td>
+      <td><span class="status ${esc(r.status)}">${esc(r.status)}</span></td>
+      <td><div class="actions">
+        <button class="neutral" onclick="viewRecord('${esc(r.id)}')">Details</button>
+        <button class="danger" onclick="deleteRecord('${esc(r.id)}')">Delete</button>
+      </div></td>
+    </tr>
+  `).join(""):`<tr><td colspan="7" class="empty">No transaction records found.</td></tr>`;
+}
+
+function viewRecord(id){
+  const r=records.find(x=>x.id===id);
+  if(!r)return;
+  alert(
+    "Transaction ID: "+r.id+
+    "\nUser: "+r.user+
+    "\nType: "+r.type+
+    "\nAmount: "+money(r.amount)+
+    "\nReference: "+(r.reference||"Not provided")+
+    "\nDate: "+r.date+
+    "\nStatus: "+r.status
+  );
+}
+
+function deleteRecord(id){
+  if(!confirm("Delete this demo transaction record?"))return;
+  records=records.filter(r=>r.id!==id);
+  save();
+}
+
+function exportCSV(){
+  const data=[["Transaction ID","User","Type","Amount","Date","Status","Reference"],
+    ...records.map(r=>[r.id,r.user,r.type,r.amount,r.date,r.status,r.reference])];
+
+  const csv=data.map(row=>row.map(v=>
+    '"'+String(v??"").replace(/"/g,'""')+'"'
+  ).join(",")).join("\n");
+
+  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="capitaxio-transaction-log.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+render();
+</script>
+</body>
+</html>

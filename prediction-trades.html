@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Capitaxio | Prediction Trades</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:24px;background:#081326;color:#fff;font-family:Arial}
+main{max-width:1200px;margin:auto}h1{margin-bottom:8px}.sub{color:#9aabc5}
+.panel,.stat{background:#13213a;border:1px solid #263b5e;border-radius:12px;padding:18px;margin:18px 0}
+input,select{background:#081326;color:white;border:1px solid #304767;padding:11px;border-radius:7px}
+input{width:min(100%,350px)}button{padding:9px 13px;border:0;border-radius:6px;color:white;cursor:pointer;margin:2px}
+.refresh{background:#1769c2}.save{background:#159b68}.del{background:#b02c3b}
+.tablewrap{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:700px}
+th,td{text-align:left;padding:12px;border-bottom:1px solid #263b5e;font-size:13px}
+th{background:#102b68;color:#65d6f4}.muted{color:#9aabc5}
+</style></head>
+<body><main>
+<h1>Prediction Trades</h1><p class="sub">View and manage prediction trade records.</p>
+<div class="panel">
+<input id="search" placeholder="Search trades..." oninput="render()">
+<button class="refresh" onclick="loadData()">Refresh</button>
+<p class="muted" id="msg">Connecting...</p>
+</div>
+<div class="panel tablewrap"><table><thead id="head"></thead><tbody id="body"></tbody></table></div>
+</main>
+<script>
+const db=window.supabase.createClient(
+"https://zwffgoenruzcctkyptjg.supabase.co",
+"sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar"
+);
+const TABLE="prediction_trades";
+let records=[];
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+async function loadData(){
+msg.textContent="Loading...";
+const {data,error}=await db.from(TABLE).select("*").order("created_at",{ascending:false});
+if(error){msg.textContent="Error: "+error.message;return;}
+records=data||[];msg.textContent=records.length+" records found.";render();
+}
+function render(){
+let q=search.value.toLowerCase();
+let rows=records.filter(r=>JSON.stringify(r).toLowerCase().includes(q));
+if(!rows.length){head.innerHTML="";body.innerHTML='<tr><td>No records found.</td></tr>';return;}
+let cols=Object.keys(rows[0]);
+head.innerHTML="<tr>"+cols.map(c=>"<th>"+esc(c)+"</th>").join("")+"<th>Actions</th></tr>";
+body.innerHTML=rows.map(r=>"<tr>"+cols.map(c=>"<td>"+esc(r[c])+"</td>").join("")+
+"<td>"+(r.id!==undefined?(r.status!==undefined?'<button class="save" onclick="changeStatus('+Number(r.id)+')">Change Status</button>':'')+
+'<button class="del" onclick="removeRow('+Number(r.id)+')">Delete</button>':"—")+"</td></tr>").join("");
+}
+async function changeStatus(id){
+let r=records.find(x=>Number(x.id)===id);if(!r)return;
+let next=prompt("Enter new status:",r.status);if(next===null||!next.trim())return;
+let {error}=await db.from(TABLE).update({status:next.trim()}).eq("id",id);
+if(error){alert(error.message);return;}loadData();
+}
+async function removeRow(id){
+if(!confirm("Delete this trade record?"))return;
+let {error}=await db.from(TABLE).delete().eq("id",id);
+if(error){alert(error.message);return;}loadData();
+}
+loadData();
+</script></body></html>

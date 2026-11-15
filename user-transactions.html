@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio - User Transactions</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f4f6fb;color:#20283a}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:235px;background:#172238;color:white;padding:23px 14px;flex-shrink:0}
+.brand{font-size:25px;font-weight:bold;color:#54dfb1;margin:0 10px 8px}
+.sub{font-size:11px;color:#aebbd0;margin:0 10px 25px;letter-spacing:2px}
+.sidebar a{display:block;padding:12px 14px;color:#d5ddec;text-decoration:none;border-radius:8px;margin:5px 0;font-size:14px}
+.sidebar a:hover,.sidebar a.active{background:#29405e;color:#54dfb1}
+.main{flex:1;min-width:0;padding:28px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:25px}
+h1{font-size:27px;margin-bottom:7px}
+.muted{color:#7e899e;font-size:13px;line-height:1.6}
+.admin{background:white;padding:11px 16px;border-radius:10px;font-size:13px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:22px}
+.card{background:white;padding:21px;border-radius:13px;box-shadow:0 3px 15px #192b4710}
+.card p{font-size:13px;color:#7e899e;margin-bottom:12px}
+.card h2{font-size:25px;overflow-wrap:anywhere}
+.green{color:#149d78}.red{color:#e34f66}.blue{color:#4279df}
+.panel{background:white;border-radius:13px;padding:22px;box-shadow:0 3px 15px #192b4710}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.panel h3{font-size:18px}
+.controls{display:flex;gap:9px;flex-wrap:wrap}
+input,select{padding:11px 12px;border:1px solid #dfe4ee;border-radius:8px;font-size:13px;outline:none;background:white}
+input{min-width:210px}
+button{border:0;border-radius:7px;padding:10px 12px;cursor:pointer;font-weight:600;font-size:12px}
+button:disabled{opacity:.6;cursor:not-allowed}
+.btn-dark{background:#263751;color:white}
+.btn-green{background:#d9f8ed;color:#087b5d}
+.btn-red{background:#ffe3e7;color:#b91f3a}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:850px}
+th,td{text-align:left;padding:14px 12px;border-bottom:1px solid #edf0f5;font-size:13px}
+th{color:#7e899e;font-size:11px;text-transform:uppercase;letter-spacing:.5px;background:#fafbfe}
+.pill{display:inline-block;padding:5px 9px;border-radius:20px;font-size:11px}
+.empty{text-align:center;padding:30px;color:#8791a3}
+.notice{display:none;padding:12px 14px;border-radius:8px;font-size:13px;line-height:1.6;margin-bottom:16px}
+.notice.error{display:block;background:#fff0f0;color:#a52b35}
+.notice.info{display:block;background:#eef6ff;color:#285a89}
+.notice.success{display:block;background:#d9f8ed;color:#087b5d}
+.footer{font-size:12px;color:#8a94a7;margin-top:20px;text-align:center}
+@media(max-width:850px){.sidebar{width:190px}.main{padding:18px}.cards{grid-template-columns:1fr}}
+@media(max-width:560px){.layout{display:block}.sidebar{width:100%;padding:15px}.sidebar a{display:inline-block;padding:9px}.sub{margin-bottom:10px}.main{padding:14px}.panel{padding:14px}h1{font-size:23px}}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="brand">Capitaxio</div>
+  <div class="sub">ADMIN PANEL</div>
+  <a href="admin.html">Dashboard</a>
+  <a href="manage-users.html">Manage Users</a>
+  <a href="user-profile.html">User Profile</a>
+  <a class="active" href="user-transactions.html">User Transactions</a>
+  <a href="deposits.html">Deposits</a>
+  <a href="withdrawals.html">Withdrawals</a>
+  <a href="investment-history.html">Investment History</a>
+  <a href="reward-history.html">Reward History</a>
+  <a href="reports-analytics.html">Reports & Analytics</a>
+  <a href="system-configuration.html">System Configuration</a>
+  <a href="#" onclick="logout(event)">Logout</a>
+</aside>
+
+<main class="main">
+  <div class="top">
+    <div>
+      <h1>User Transactions</h1>
+      <p class="muted">Review transaction records, amounts and their current status.</p>
+    </div>
+    <div class="admin">🛡️ Administrator</div>
+  </div>
+
+  <div id="notice" class="notice"></div>
+
+  <div class="cards">
+    <div class="card"><p>Total Transactions</p><h2 id="total">0</h2></div>
+    <div class="card"><p>Total Transaction Amount</p><h2 class="blue" id="amount">Rs 0</h2></div>
+    <div class="card"><p>Successful Transactions</p><h2 class="green" id="success">0</h2></div>
+  </div>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div>
+        <h3>Transaction History</h3>
+        <p class="muted" style="margin-top:7px">Live transaction records from Supabase.</p>
+      </div>
+      <div class="controls">
+        <input id="search" placeholder="Search ID, user or type...">
+        <select id="typeFilter">
+          <option value="all">All Types</option>
+          <option value="Deposit">Deposit</option>
+          <option value="Withdrawal">Withdrawal</option>
+          <option value="Investment">Investment</option>
+          <option value="Reward">Reward</option>
+        </select>
+        <select id="statusFilter">
+          <option value="all">All Statuses</option>
+          <option value="Completed">Completed</option>
+          <option value="Pending">Pending</option>
+          <option value="Failed">Failed</option>
+        </select>
+        <button class="btn-dark" id="refreshBtn" onclick="loadTransactions()">Refresh</button>
+        <button class="btn-green" onclick="exportCSV()">Export CSV</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Transaction ID</th>
+            <th>User</th>
+            <th>Type</th>
+            <th>Amount (PKR)</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="empty" id="empty">Loading transactions...</div>
+    </div>
+  </section>
+  <div class="footer">Capitaxio Admin Panel · User Transactions</div>
+</main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+
+const client = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+// Apni Supabase table ke exact names yahan set karein.
+const TABLE = "transactions";
+const ID_COLUMN = "id";
+const USER_COLUMN = "user_id";
+const TYPE_COLUMN = "type";
+const AMOUNT_COLUMN = "amount";
+const DATE_COLUMN = "created_at";
+const STATUS_COLUMN = "status";
+
+let transactions = [];
+let busy = false;
+
+function showNotice(message, type = "error") {
+  const box = document.getElementById("notice");
+  box.textContent = message;
+  box.className = "notice " + type;
+}
+
+function clearNotice() {
+  const box = document.getElementById("notice");
+  box.textContent = "";
+  box.className = "notice";
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[char]));
+}
+
+function money(value) {
+  const amount = Number(value || 0);
+  return "Rs " + (Number.isFinite(amount) ? amount : 0)
+    .toLocaleString("en-PK");
+}
+
+function normalStatus(value) {
+  const s = String(value || "Pending").toLowerCase();
+
+  if (["completed", "success", "successful", "approved"].includes(s)) {
+    return "Completed";
+  }
+
+  if (["failed", "rejected", "cancelled", "canceled"].includes(s)) {
+    return "Failed";
+  }
+
+  return "Pending";
+}
+
+function normalType(value) {
+  const s = String(value || "Other").toLowerCase();
+
+  if (s.includes("deposit")) return "Deposit";
+  if (s.includes("withdraw")) return "Withdrawal";
+  if (s.includes("invest")) return "Investment";
+  if (s.includes("reward")) return "Reward";
+
+  return String(value || "Other");
+}
+
+function transactionUser(transaction) {
+  return transaction.user_name ||
+         transaction.full_name ||
+         transaction.name ||
+         transaction.email ||
+         transaction[USER_COLUMN] ||
+         "Unknown User";
+}
+
+function transactionDate(transaction) {
+  const value = transaction[DATE_COLUMN] ||
+                transaction.transaction_date ||
+                transaction.date;
+
+  if (!value) return "—";
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime())
+    ? String(value)
+    : parsed.toISOString().slice(0, 10);
+}
+
+function render() {
+  const query = document.getElementById("search").value
+    .toLowerCase().trim();
+
+  const typeFilter = document.getElementById("typeFilter").value;
+  const statusFilter = document.getElementById("statusFilter").value;
+
+  const totalAmount = transactions.reduce((sum, t) => {
+    const amount = Number(t[AMOUNT_COLUMN] || 0);
+    return sum + (Number.isFinite(amount) ? amount : 0);
+  }, 0);
+
+  document.getElementById("total").textContent = transactions.length;
+  document.getElementById("amount").textContent = money(totalAmount);
+  document.getElementById("success").textContent =
+    transactions.filter(t => normalStatus(t[STATUS_COLUMN]) === "Completed").length;
+
+  const list = transactions.filter(t => {
+    const searchable = [
+      t[ID_COLUMN],
+      transactionUser(t),
+      normalType(t[TYPE_COLUMN])
+    ].join(" ").toLowerCase();
+
+    return searchable.includes(query) &&
+      (typeFilter === "all" || normalType(t[TYPE_COLUMN]) === typeFilter) &&
+      (statusFilter === "all" || normalStatus(t[STATUS_COLUMN]) === statusFilter);
+  });
+
+  document.getElementById("rows").innerHTML = list.map(t => {
+    const status = normalStatus(t[STATUS_COLUMN]);
+    const type = normalType(t[TYPE_COLUMN]);
+
+    const color = status === "Completed"
+      ? "background:#d9f8ed;color:#087b5d"
+      : status === "Pending"
+        ? "background:#fff0d3;color:#95600c"
+        : "background:#ffe3e7;color:#b91f3a";
+
+    const id = String(t[ID_COLUMN] ?? "");
+
+    return `<tr>
+      <td>${escapeHTML(id)}</td>
+      <td>${escapeHTML(transactionUser(t))}</td>
+      <td>${escapeHTML(type)}</td>
+      <td>${money(t[AMOUNT_COLUMN])}</td>
+      <td>${escapeHTML(transactionDate(t))}</td>
+      <td><span class="pill" style="${color}">${escapeHTML(status)}</span></td>
+      <td>
+        <button class="btn-dark" onclick="changeStatus(${JSON.stringify(id)})" ${busy ? "disabled" : ""}>Change Status</button>
+        <button class="btn-red" onclick="deleteTransaction(${JSON.stringify(id)})" ${busy ? "disabled" : ""}>Delete</button>
+      </td>
+    </tr>`;
+  }).join("");
+
+  const empty = document.getElementById("empty");
+  empty.style.display = list.length ? "none" : "block";
+
+  if (!list.length) {
+    empty.textContent = transactions.length
+      ? "No matching transactions found."
+      : "No transaction records found.";
+  }
+}
+
+async function loadTransactions() {
+  if (busy) return;
+
+  busy = true;
+  clearNotice();
+
+  const refreshBtn = document.getElementById("refreshBtn");
+  refreshBtn.disabled = true;
+  refreshBtn.textContent = "Loading...";
+
+  document.getElementById("empty").style.display = "block";
+  document.getElementById("empty").textContent = "Loading transactions...";
+
+  try {
+    const { data, error } = await client
+      .from(TABLE)
+      .select("*")
+      .order(DATE_COLUMN, { ascending: false });
+
+    if (error) throw error;
+
+    transactions = data || [];
+    render();
+
+    if (!transactions.length) {
+      showNotice("Database mein transaction records nahi mile.", "info");
+    }
+  } catch (error) {
+    transactions = [];
+    render();
+    showNotice(
+      "Transactions load nahi huin: " + error.message +
+      ". Table name, columns aur RLS SELECT policy check karein."
+    );
+  } finally {
+    busy = false;
+    refreshBtn.disabled = false;
+    refreshBtn.textContent = "Refresh";
+    render();
+  }
+}
+
+async function changeStatus(id) {
+  if (busy) return;
+
+  const transaction = transactions.find(
+    t => String(t[ID_COLUMN]) === String(id)
+  );
+
+  if (!transaction) return;
+
+  const current = normalStatus(transaction[STATUS_COLUMN]);
+  const next = prompt(
+    "Status likhein: Completed, Pending, Failed",
+    current
+  );
+
+  if (next === null) return;
+
+  const allowed = ["Completed", "Pending", "Failed"];
+  const selected = allowed.find(
+    s => s.toLowerCase() === next.trim().toLowerCase()
+  );
+
+  if (!selected) {
+    alert("Status Completed, Pending ya Failed hona chahiye.");
+    return;
+  }
+
+  if (!confirm("Kya transaction status update karna hai?")) return;
+
+  busy = true;
+  clearNotice();
+
+  try {
+    const { data, error } = await client
+      .from(TABLE)
+      .update({ [STATUS_COLUMN]: selected })
+      .eq(ID_COLUMN, transaction[ID_COLUMN])
+      .select();
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      throw new Error("Record update nahi hua. RLS permissions check karein.");
+    }
+
+    showNotice("Transaction status update ho gaya.", "success");
+    await loadTransactions();
+  } catch (error) {
+    showNotice("Status update nahi hua: " + error.message);
+  } finally {
+    busy = false;
+    render();
+  }
+}
+
+async function deleteTransaction(id) {
+  if (busy) return;
+
+  const transaction = transactions.find(
+    t => String(t[ID_COLUMN]) === String(id)
+  );
+
+  if (!transaction) return;
+
+  if (!confirm(
+    "Kya aap is transaction record ko database se delete karna chahte hain? Ye action wapas nahi hoga."
+  )) return;
+
+  busy = true;
+  clearNotice();
+
+  try {
+    const { data, error } = await client
+      .from(TABLE)
+      .delete()
+      .eq(ID_COLUMN, transaction[ID_COLUMN])
+      .select();
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      throw new Error("Record delete nahi hua. RLS permissions check karein.");
+    }
+
+    showNotice("Transaction record delete ho gaya.", "success");
+    await loadTransactions();
+  } catch (error) {
+    showNotice("Transaction delete nahi hui: " + error.message);
+  } finally {
+    busy = false;
+    render();
+  }
+}
+
+function exportCSV() {
+  const query = document.getElementById("search").value
+    .toLowerCase().trim();
+  const typeFilter = document.getElementById("typeFilter").value;
+  const statusFilter = document.getElementById("statusFilter").value;
+
+  const list = transactions.filter(t => {
+    const searchable = [
+      t[ID_COLUMN],
+      transactionUser(t),
+      normalType(t[TYPE_COLUMN])
+    ].join(" ").toLowerCase();
+
+    return searchable.includes(query) &&
+      (typeFilter === "all" || normalType(t[TYPE_COLUMN]) === typeFilter) &&
+      (statusFilter === "all" || normalStatus(t[STATUS_COLUMN]) === statusFilter);
+  });
+
+  const quote = value => '"' + String(value ?? "").replace(/"/g, '""') + '"';
+
+  const csv = [
+    ["Transaction ID", "User", "Type", "Amount PKR", "Date", "Status"],
+    ...list.map(t => [
+      t[ID_COLUMN],
+      transactionUser(t),
+      normalType(t[TYPE_COLUMN]),
+      t[AMOUNT_COLUMN],
+      transactionDate(t),
+      normalStatus(t[STATUS_COLUMN])
+    ])
+  ].map(row => row.map(quote).join(",")).join("\r\n");
+
+  const blob = new Blob(["\uFEFF" + csv], {
+    type: "text/csv;charset=utf-8;"
+  });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "capitaxio-user-transactions.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function logout(event) {
+  event.preventDefault();
+
+  const { error } = await client.auth.signOut();
+
+  if (error) {
+    showNotice("Logout nahi hua: " + error.message);
+    return;
+  }
+
+  window.location.href = "admin-login.html";
+}
+
+document.getElementById("search").addEventListener("input", render);
+document.getElementById("typeFilter").addEventListener("change", render);
+document.getElementById("statusFilter").addEventListener("change", render);
+
+loadTransactions();
+</script>
+</body>
+</html>

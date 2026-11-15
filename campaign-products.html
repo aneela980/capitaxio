@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio | Campaign Products</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#081326;color:#eef4ff;padding:25px}
+.container{max-width:1200px;margin:auto}
+.header{background:#102b68;padding:24px;border-radius:14px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+.header h1{font-size:24px;margin-bottom:7px}
+.header p{color:#b9c9ed;font-size:13px}
+button{background:#17bce8;color:#041426;border:0;padding:11px 18px;border-radius:8px;font-weight:bold;cursor:pointer}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px;margin-bottom:20px}
+.card,.panel{background:#13213a;border:1px solid #263b5e;padding:20px;border-radius:12px}
+.card p{color:#a9bad7;font-size:13px;margin-bottom:10px}
+.card h2{font-size:25px;color:#22c5ee}
+.panel-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+input{background:#081326;border:1px solid #344b70;color:white;padding:12px;border-radius:8px;width:260px;max-width:100%}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:750px}
+th,td{padding:14px;text-align:left;border-bottom:1px solid #293b58;font-size:13px}
+th{color:#62d8f4;background:#192b49}
+td{color:#dce7fa}
+.product-img{width:45px;height:45px;object-fit:cover;border-radius:7px}
+.status{padding:6px 10px;border-radius:20px;font-size:11px;background:#244b43;color:#8df0bd}
+.inactive{background:#55323a;color:#ffabb5}
+#message{padding:12px;color:#ffb6b6;font-size:13px}
+.empty{text-align:center;padding:25px;color:#a9bad7}
+@media(max-width:600px){body{padding:12px}.header h1{font-size:20px}.panel{padding:12px}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+ <div>
+  <h1>Campaign Products</h1>
+  <p>View and monitor campaign products</p>
+ </div>
+ <button onclick="loadProducts()">Refresh Products</button>
+</div>
+
+<div class="stats">
+ <div class="card">
+  <p>Total Products</p>
+  <h2 id="total">—</h2>
+ </div>
+ <div class="card">
+  <p>Active Products</p>
+  <h2 id="active">—</h2>
+ </div>
+ <div class="card">
+  <p>Inactive Products</p>
+  <h2 id="inactive">—</h2>
+ </div>
+</div>
+
+<div class="panel">
+ <div class="panel-top">
+  <h3>All Campaign Products</h3>
+  <input id="search" type="search" placeholder="Search products..." oninput="renderProducts()">
+ </div>
+
+ <div id="message">Loading products...</div>
+
+ <div class="table-wrap">
+  <table>
+   <thead>
+    <tr>
+     <th>ID</th>
+     <th>Image</th>
+     <th>Product Name</th>
+     <th>Campaign ID</th>
+     <th>Description</th>
+     <th>Price</th>
+     <th>Status</th>
+     <th>Created At</th>
+    </tr>
+   </thead>
+   <tbody id="rows"></tbody>
+  </table>
+ </div>
+</div>
+
+</div>
+
+<script>
+const SUPABASE_URL="https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY="sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+let products=[];
+
+async function loadProducts(){
+ const message=document.getElementById("message");
+ message.textContent="Loading products...";
+
+ const {data,error}=await db
+  .from("campaign_products")
+  .select("*")
+  .order("created_at",{ascending:false});
+
+ if(error){
+  message.textContent="Database error: "+error.message;
+  document.getElementById("rows").innerHTML="";
+  return;
+ }
+
+ products=data||[];
+
+ document.getElementById("total").textContent=products.length;
+ document.getElementById("active").textContent=
+  products.filter(p=>String(p.status||"").toLowerCase()==="active").length;
+ document.getElementById("inactive").textContent=
+  products.filter(p=>String(p.status||"").toLowerCase()!=="active").length;
+
+ message.textContent=products.length?"":"No campaign products found.";
+ renderProducts();
+}
+
+function renderProducts(){
+ const search=document.getElementById("search").value.toLowerCase();
+
+ const filtered=products.filter(p=>
+  JSON.stringify(p).toLowerCase().includes(search)
+ );
+
+ const rows=document.getElementById("rows");
+
+ if(!filtered.length){
+  rows.innerHTML='<tr><td colspan="8" class="empty">No matching products found.</td></tr>';
+  return;
+ }
+
+ rows.innerHTML=filtered.map(p=>`
+  <tr>
+   <td>${safe(p.id)}</td>
+   <td>${p.image_url ? `<img class="product-img" src="${safe(p.image_url)}" alt="Product" onerror="this.style.display='none'">` : "—"}</td>
+   <td>${safe(p.product_name)}</td>
+   <td>${safe(p.campaign_id)}</td>
+   <td>${safe(p.description)}</td>
+   <td>${safe(p.price)}</td>
+   <td><span class="status ${String(p.status).toLowerCase()==="active"?"":"inactive"}">${safe(p.status)}</span></td>
+   <td>${safe(p.created_at)}</td>
+  </tr>
+ `).join("");
+}
+
+function safe(value){
+ return String(value??"—").replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+ }[c]));
+}
+
+loadProducts();
+</script>
+</body>
+</html>

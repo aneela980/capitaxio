@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Promo Codes | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "title": "Promo Codes",
+ "description": "Promo codes banane aur band karne ke liye. Abhi sirf list aur record hai, user ki taraf se code lagane ka kaam alag se banega.",
+ "table": "promo_codes",
+ "orderBy": "created_at",
+ "columns": [
+  {
+   "key": "code",
+   "label": "Code",
+   "type": "text"
+  },
+  {
+   "key": "reward_amount",
+   "label": "Reward",
+   "type": "money"
+  },
+  {
+   "key": "max_uses",
+   "label": "Max Uses",
+   "type": "text"
+  },
+  {
+   "key": "used_count",
+   "label": "Used",
+   "type": "text"
+  },
+  {
+   "key": "expires_at",
+   "label": "Expires",
+   "type": "date"
+  },
+  {
+   "key": "is_active",
+   "label": "Active",
+   "type": "bool"
+  }
+ ],
+ "form": [
+  {
+   "key": "code",
+   "label": "Code",
+   "type": "text",
+   "required": true,
+   "maxlength": 30,
+   "help": "Bara harf aur number, jaise WELCOME100"
+  },
+  {
+   "key": "reward_amount",
+   "label": "Reward Amount (Rs.)",
+   "type": "number",
+   "min": 0
+  },
+  {
+   "key": "max_uses",
+   "label": "Max Uses (khali = be-had)",
+   "type": "number",
+   "min": 1
+  },
+  {
+   "key": "expires_at",
+   "label": "Expiry (optional)",
+   "type": "datetime"
+  },
+  {
+   "key": "is_active",
+   "label": "Active",
+   "type": "checkbox",
+   "default": true
+  }
+ ],
+ "canAdd": true,
+ "canEdit": true,
+ "canDelete": true,
+ "toggleKey": "is_active",
+ "searchKeys": [
+  "code"
+ ],
+ "addLabel": "+ New Code"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

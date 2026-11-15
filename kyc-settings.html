@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio - KYC Settings</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root{--bg:#0b1020;--panel:#131b30;--panel2:#18223b;--border:#283550;--text:#f1f5ff;--muted:#93a1bb;--purple:#8b5cf6;--purple2:#7045e8;--green:#34d399;--red:#fb7185}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:245px;background:#0e1629;border-right:1px solid var(--border);padding:25px 16px;flex-shrink:0}
+.brand{font-size:23px;font-weight:800;margin:0 0 35px 10px;letter-spacing:-.7px}
+.brand span{color:var(--purple)}
+.menu-label{color:#71809d;font-size:10px;font-weight:700;letter-spacing:1.5px;padding:0 12px;margin:24px 0 10px}
+.nav-link{display:flex;align-items:center;gap:12px;color:var(--muted);text-decoration:none;padding:12px;margin:4px 0;border-radius:9px;font-size:13px;transition:.2s}
+.nav-link:hover,.nav-link.active{background:#272044;color:#fff}
+.nav-link.active{border-left:3px solid var(--purple)}
+.main{flex:1;min-width:0}
+.topbar{min-height:75px;padding:20px 30px;display:flex;justify-content:space-between;align-items:center;gap:15px;border-bottom:1px solid var(--border);background:#10182b}
+.topbar h2{font-size:19px}
+.admin{font-size:12px;color:var(--muted)}
+.admin strong{color:var(--text);margin-left:8px}
+.content{padding:30px;max-width:1250px;margin:auto}
+.page-heading{margin-bottom:25px}
+.page-heading h1{font-size:27px;margin-bottom:9px}
+.page-heading p{color:var(--muted);font-size:13px;line-height:1.7}
+.notice{padding:15px 17px;background:#211b3b;border:1px solid #483675;border-radius:10px;color:#d9ccff;font-size:12px;line-height:1.7;margin-bottom:25px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:23px}
+.card.full{grid-column:1/-1}
+.card-head{margin-bottom:22px;padding-bottom:17px;border-bottom:1px solid var(--border)}
+.card-head h3{font-size:16px;margin-bottom:7px}
+.card-head p{color:var(--muted);font-size:12px;line-height:1.6}
+.field{margin-bottom:21px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:12px;font-weight:600;margin-bottom:10px}
+.field small{display:block;color:var(--muted);font-size:11px;line-height:1.6;margin-top:8px}
+input[type="text"],input[type="number"],select,textarea{width:100%;padding:12px 13px;background:#0d1528;border:1px solid var(--border);border-radius:8px;outline:none;color:var(--text);font-family:inherit;font-size:12px}
+input:focus,select:focus,textarea:focus{border-color:var(--purple)}
+textarea{min-height:100px;resize:vertical;line-height:1.7}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:15px 0;border-bottom:1px solid var(--border)}
+.toggle-row:first-child{padding-top:0}
+.toggle-row:last-child{border-bottom:none;padding-bottom:0}
+.toggle-info strong{display:block;font-size:12px;margin-bottom:6px}
+.toggle-info small{display:block;color:var(--muted);font-size:11px;line-height:1.6}
+.switch{width:42px;height:23px;position:relative;flex-shrink:0}
+.switch input{display:none}
+.slider{position:absolute;inset:0;cursor:pointer;background:#36435d;border-radius:30px;transition:.2s}
+.slider:before{content:"";position:absolute;height:17px;width:17px;left:3px;top:3px;border-radius:50%;background:white;transition:.2s}
+.switch input:checked+.slider{background:var(--purple)}
+.switch input:checked+.slider:before{transform:translateX(19px)}
+.document-option{display:flex;align-items:center;justify-content:space-between;gap:15px;background:#0e172a;border:1px solid var(--border);border-radius:9px;padding:15px;margin-bottom:12px}
+.document-option strong{display:block;font-size:12px;margin-bottom:5px}
+.document-option small{color:var(--muted);font-size:11px}
+input[type="checkbox"]{accent-color:var(--purple);width:17px;height:17px;cursor:pointer;flex-shrink:0}
+.actions{display:flex;justify-content:flex-end;gap:12px;margin-top:25px;flex-wrap:wrap}
+.btn{border:none;border-radius:8px;padding:12px 20px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.btn-primary{color:white;background:var(--purple)}
+.btn-primary:hover{background:var(--purple2)}
+.btn-secondary{background:#222e47;color:#d6def0;border:1px solid var(--border)}
+.status{display:none;margin-top:20px;padding:13px;border-radius:8px;background:#12352e;color:#8cf0c8;font-size:12px;line-height:1.6}
+.status.error{background:#3a1822;color:#ffb3c0}
+.footer{color:#71809d;text-align:center;font-size:11px;padding:25px 10px}
+@media(max-width:900px){.sidebar{width:205px}.content{padding:22px}}
+@media(max-width:650px){
+.layout{display:block}
+.sidebar{width:100%;padding:15px;border-right:none;border-bottom:1px solid var(--border)}
+.brand{margin:0 0 12px 5px}
+.menu-label{margin-top:12px}
+.sidebar nav{display:flex;flex-wrap:wrap;gap:5px}
+.nav-link{padding:9px;margin:0;font-size:11px}
+.topbar{padding:17px}
+.content{padding:17px}
+.grid{grid-template-columns:1fr}
+.card.full{grid-column:auto}
+.page-heading h1{font-size:23px}
+.card{padding:18px}
+}
+</style>
+</head>
+
+<body style="visibility:hidden">
+
+<div class="layout">
+
+    <aside class="sidebar">
+        <div class="brand">Capita<span>xio</span></div>
+
+        <div class="menu-label">MAIN MENU</div>
+        <nav>
+            <a class="nav-link" href="admin.html">▦ Dashboard</a>
+            <a class="nav-link" href="general-settings.html">⚙ General Settings</a>
+            <a class="nav-link" href="manage-users.html">♙ Manage Users</a>
+            <a class="nav-link" href="user-verification.html">✓ User Verification</a>
+            <a class="nav-link active" href="kyc-settings.html">▣ KYC Settings</a>
+            <a class="nav-link" href="security-settings.html">♧ Security Settings</a>
+            <a class="nav-link" href="notification-settings.html">♢ Notification Settings</a>
+            <a class="nav-link" href="system-configuration.html">⚙ System Configuration</a>
+            <a class="nav-link" href="admin-login.html">↪ Admin Login</a>
+        </nav>
+    </aside>
+
+    <main class="main">
+
+        <header class="topbar">
+            <h2>KYC Settings</h2>
+            <div class="admin">Control Panel <strong id="adminName">Administrator</strong></div>
+        </header>
+
+        <div class="content">
+
+            <div class="page-heading">
+                <h1>KYC Settings</h1>
+                <p>Manage identity verification requirements and review preferences for Capitaxio users.</p>
+            </div>
+
+            <div class="notice">
+                <strong>Important:</strong> Ye settings Supabase database mein save hoti hain. Lekin KYC ko asal mein lagu karna (jaise withdrawal se pehle KYC check) user website ke code par depend karta hai.
+            </div>
+
+            <div class="grid">
+
+                <section class="card">
+                    <div class="card-head">
+                        <h3>General Verification</h3>
+                        <p>Configure the basic KYC requirements.</p>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <strong>KYC Verification</strong>
+                            <small>Enable or disable the KYC requirement.</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="kycEnabled" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <strong>Require KYC for Withdrawals</strong>
+                            <small>Mark verification as required before withdrawal requests.</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="withdrawKyc" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <strong>Require KYC for Account Activation</strong>
+                            <small>Indicate that verification is required for activation.</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="activationKyc">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <strong>Allow Resubmission</strong>
+                            <small>Allow users to resubmit rejected documents.</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="resubmission" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="card-head">
+                        <h3>Document Requirements</h3>
+                        <p>Select the documents users should provide.</p>
+                    </div>
+
+                    <div class="document-option">
+                        <div>
+                            <strong>CNIC Front Side</strong>
+                            <small>Front side of national identity card</small>
+                        </div>
+                        <input type="checkbox" id="cnicFront" checked>
+                    </div>
+
+                    <div class="document-option">
+                        <div>
+                            <strong>CNIC Back Side</strong>
+                            <small>Back side of national identity card</small>
+                        </div>
+                        <input type="checkbox" id="cnicBack" checked>
+                    </div>
+
+                    <div class="document-option">
+                        <div>
+                            <strong>Selfie Verification</strong>
+                            <small>User selfie for manual identity review</small>
+                        </div>
+                        <input type="checkbox" id="selfie" checked>
+                    </div>
+
+                    <div class="document-option">
+                        <div>
+                            <strong>Address Proof</strong>
+                            <small>Optional supporting address document</small>
+                        </div>
+                        <input type="checkbox" id="addressProof">
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="card-head">
+                        <h3>Upload Preferences</h3>
+                        <p>Set the allowed file types and maximum size for the intended upload system.</p>
+                    </div>
+
+                    <div class="field">
+                        <label for="fileTypes">Allowed File Types</label>
+                        <select id="fileTypes" autocomplete="off">
+                            <option value="jpg,png,jpeg">JPG, JPEG and PNG</option>
+                            <option value="jpg,png,jpeg,pdf">JPG, JPEG, PNG and PDF</option>
+                            <option value="pdf">PDF only</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="fileSize">Maximum File Size (MB)</label>
+                        <input type="number" id="fileSize" min="1" max="50" value="5">
+                        <small>Ye value save hoti hai. Files ki asal jaanch upload karne wale code mein honi chahiye.</small>
+                    </div>
+
+                    <div class="field">
+                        <label for="expiryDays">Review Target (Days)</label>
+                        <input type="number" id="expiryDays" min="1" max="90" value="3">
+                        <small>Intended review target for the admin team, not an active timer.</small>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="card-head">
+                        <h3>Verification Workflow</h3>
+                        <p>Choose how the proposed review process should work.</p>
+                    </div>
+
+                    <div class="field">
+                        <label for="reviewMode">Review Method</label>
+                        <select id="reviewMode" autocomplete="off">
+                            <option value="manual">Manual Admin Review</option>
+                            <option value="assisted">Manual Review with Future Assistance</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="defaultStatus">Default KYC Status</label>
+                        <select id="defaultStatus" autocomplete="off">
+                            <option value="pending">Pending</option>
+                            <option value="unverified">Unverified</option>
+                        </select>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <strong>Admin Review Required</strong>
+                            <small>Require an administrator to review submissions.</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="adminReview" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <strong>Notify on Status Change</strong>
+                            <small>Proposed notification when a review status changes.</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="statusNotify" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </section>
+
+                <section class="card full">
+                    <div class="card-head">
+                        <h3>User Instructions</h3>
+                        <p>Write the instructions that could be shown on the KYC submission page.</p>
+                    </div>
+
+                    <div class="field">
+                        <label for="instructions">KYC Instructions</label>
+                        <textarea id="instructions">Please provide clear images of your CNIC front and back sides. If selfie verification is required, upload a clear selfie. Ensure that the information is readable before submitting your documents for review.</textarea>
+                    </div>
+                </section>
+
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-secondary" id="resetBtn" type="button">Reset Form</button>
+                <button class="btn btn-primary" id="saveBtn" type="button">Save Settings</button>
+            </div>
+
+            <div class="status" id="statusMessage" role="status"></div>
+
+        </div>
+
+        <footer class="footer">
+            © 2026 Capitaxio Admin Panel
+        </footer>
+
+    </main>
+</div>
+
+<script>
+const SUPABASE_URL = "https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const defaultSettings = {
+    kycEnabled: true,
+    withdrawKyc: true,
+    activationKyc: false,
+    resubmission: true,
+    cnicFront: true,
+    cnicBack: true,
+    selfie: true,
+    addressProof: false,
+    fileTypes: "jpg,png,jpeg",
+    fileSize: "5",
+    expiryDays: "3",
+    reviewMode: "manual",
+    defaultStatus: "pending",
+    adminReview: true,
+    statusNotify: true,
+    instructions: "Please provide clear images of your CNIC front and back sides. If selfie verification is required, upload a clear selfie. Ensure that the information is readable before submitting your documents for review."
+};
+
+const settingIds = Object.keys(defaultSettings);
+
+// Admin guard
+async function guard() {
+    const { data: s } = await db.auth.getSession();
+    if (!s.session) { window.location.replace("admin-login.html"); return false; }
+
+    const { data: a } = await db.from("admins").select("full_name")
+        .eq("user_id", s.session.user.id).eq("is_active", true).maybeSingle();
+
+    if (!a) {
+        await db.auth.signOut();
+        window.location.replace("admin-login.html");
+        return false;
+    }
+    document.getElementById("adminName").textContent = a.full_name || "Administrator";
+    document.body.style.visibility = "visible";
+    return true;
+}
+
+function showMessage(message, isError) {
+    const box = document.getElementById("statusMessage");
+    box.textContent = message;
+    box.className = "status" + (isError ? " error" : "");
+    box.style.display = "block";
+}
+
+function readSettings() {
+    const settings = {};
+    settingIds.forEach(id => {
+        const element = document.getElementById(id);
+        settings[id] = element.type === "checkbox" ? element.checked : element.value;
+    });
+    return settings;
+}
+
+function applySettings(settings) {
+    settingIds.forEach(id => {
+        const element = document.getElementById(id);
+        if (element.type === "checkbox") {
+            element.checked = Boolean(settings[id]);
+        } else {
+            element.value = settings[id];
+        }
+    });
+}
+
+// Database se aayi hui value (text ya json) ko sahi type mein badalna
+function parseValue(id, raw) {
+    const isBool = typeof defaultSettings[id] === "boolean";
+    if (isBool) return String(raw).replace(/"/g, "").toLowerCase() === "true";
+    return typeof raw === "string" ? raw : String(raw ?? "");
+}
+
+async function loadSettings() {
+    const { data, error } = await db
+        .from("kyc_settings")
+        .select("setting_key, setting_value");
+
+    if (error) {
+        showMessage("Settings load nahi hui: " + error.message, true);
+        return;
+    }
+
+    const loaded = { ...defaultSettings };
+    (data || []).forEach(row => {
+        if (settingIds.includes(row.setting_key) && row.setting_value !== null) {
+            loaded[row.setting_key] = parseValue(row.setting_key, row.setting_value);
+        }
+    });
+    applySettings(loaded);
+}
+
+document.getElementById("saveBtn").addEventListener("click", async function () {
+    const fileSize = Number(document.getElementById("fileSize").value);
+    const reviewDays = Number(document.getElementById("expiryDays").value);
+
+    if (!Number.isInteger(fileSize) || fileSize < 1 || fileSize > 50) {
+        showMessage("Please enter a maximum file size between 1 and 50 MB.", true);
+        return;
+    }
+
+    if (!Number.isInteger(reviewDays) || reviewDays < 1 || reviewDays > 90) {
+        showMessage("Please enter a review target between 1 and 90 days.", true);
+        return;
+    }
+
+    const { data: sessionData } = await db.auth.getSession();
+    if (!sessionData.session) {
+        showMessage("Pehle admin login karein, phir save karein.", true);
+        return;
+    }
+
+    const settings = readSettings();
+    const now = new Date().toISOString();
+    const rows = settingIds.map(id => ({
+        setting_key: id,
+        setting_value: String(settings[id]),
+        updated_at: now
+    }));
+
+    const button = document.getElementById("saveBtn");
+    button.disabled = true;
+
+    const { data, error } = await db
+        .from("kyc_settings")
+        .upsert(rows, { onConflict: "setting_key" })
+        .select("setting_key");
+
+    button.disabled = false;
+
+    if (error) {
+        showMessage("Save nahi hua: " + error.message, true);
+    } else if (!data || data.length === 0) {
+        showMessage("Save nahi hua. Aap admin nahi hain ya login expire ho gaya.", true);
+    } else {
+        showMessage("KYC settings kamyabi se save ho gayin.", false);
+    }
+});
+
+document.getElementById("resetBtn").addEventListener("click", function () {
+    applySettings(defaultSettings);
+    showMessage("Form default par aa gaya. Database mein badalne ke liye Save Settings dabayen.", false);
+});
+
+guard().then(ok => { if (ok) loadSettings(); });
+</script>
+
+</body>
+</html>

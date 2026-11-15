@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terms & Conditions | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<style>textarea{min-height:360px!important}</style>
+<script>
+window.PAGE = {
+ "table": "site_settings",
+ "mode": "single",
+ "idKey": "id",
+ "idValue": 1,
+ "description": "Terms & Conditions ka poora matn. Register page ke link se users ko nazar aata hai.",
+ "form": [
+  {
+   "key": "terms_text",
+   "label": "Terms & Conditions",
+   "type": "textarea",
+   "maxlength": 20000
+  }
+ ],
+ "title": "Terms & Conditions"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

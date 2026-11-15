@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Withdraw Lock | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "table": "site_settings",
+ "mode": "single",
+ "idKey": "id",
+ "idValue": 1,
+ "description": "On karne par koi admin withdrawal approve nahi kar sakta (database khud rokta hai). Users ki nayi requests phir bhi aati rahengi, bas approve nahi hongi.",
+ "form": [
+  {
+   "key": "admin_withdraw_locked",
+   "label": "Withdrawal approve karna band karein",
+   "type": "checkbox"
+  },
+  {
+   "key": "admin_withdraw_lock_message",
+   "label": "Admin ko dikhane wala paigham",
+   "type": "textarea",
+   "maxlength": 300,
+   "placeholder": "Abhi withdrawals approve nahi kiye ja sakte."
+  }
+ ],
+ "title": "Admin Withdraw Lock"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

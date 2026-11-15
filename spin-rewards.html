@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spin Rewards | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "description": "Roz ke muft spin ke inaam. Weight jitna zyada, wo inaam utna zyada nikalta hai. Inaam 0 rakhein to 'dobara koshish karein' wali entry banti hai. Spin on karne ke liye Task Settings mein 'Free spin on' ka tick lagayen.",
+ "table": "spin_prizes",
+ "orderBy": "created_at",
+ "ascending": true,
+ "columns": [
+  {
+   "key": "label",
+   "label": "Naam",
+   "type": "text"
+  },
+  {
+   "key": "reward",
+   "label": "Inaam",
+   "type": "money"
+  },
+  {
+   "key": "weight",
+   "label": "Weight",
+   "type": "text"
+  },
+  {
+   "key": "is_active",
+   "label": "Active",
+   "type": "bool"
+  }
+ ],
+ "form": [
+  {
+   "key": "label",
+   "label": "Inaam ka naam",
+   "type": "text",
+   "required": true,
+   "maxlength": 60,
+   "help": "Jaise: Rs. 5 ka inaam, ya Dobara koshish"
+  },
+  {
+   "key": "reward",
+   "label": "Inaam (Rs.)",
+   "type": "number",
+   "required": true,
+   "min": 0,
+   "default": 0
+  },
+  {
+   "key": "weight",
+   "label": "Weight (1 se 100)",
+   "type": "number",
+   "required": true,
+   "min": 1,
+   "default": 10,
+   "help": "Misaal: 80 wali entry bohat baar, 1 wali kabhi kabhi nikalti hai."
+  },
+  {
+   "key": "is_active",
+   "label": "Active",
+   "type": "checkbox",
+   "default": true
+  }
+ ],
+ "canAdd": true,
+ "canEdit": true,
+ "canDelete": true,
+ "toggleKey": "is_active",
+ "searchKeys": [
+  "label"
+ ],
+ "addLabel": "+ New Prize",
+ "title": "Spin Rewards"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

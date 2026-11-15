@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio - Active Investments</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f4f6fb;color:#243047}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:240px;background:#172238;color:#fff;padding:22px 15px;flex-shrink:0}
+.brand{font-size:24px;font-weight:bold;color:#54dfb1;margin-bottom:8px}
+.sub{font-size:11px;color:#aebbd0;margin-bottom:25px}
+.sidebar a{display:block;padding:12px;border-radius:7px;color:#dce4f0;text-decoration:none;font-size:14px;margin:4px 0}
+.sidebar a:hover,.sidebar a.active{background:#293951;color:#54dfb1}
+main{flex:1;min-width:0;padding:28px}
+.header{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:24px}
+h1{font-size:27px;margin-bottom:7px}
+.muted{color:#7b879b;font-size:13px}
+button{border:0;border-radius:7px;padding:10px 13px;cursor:pointer;font-weight:bold}
+button:disabled{opacity:.55;cursor:not-allowed}
+.primary{background:#54dfb1;color:#172238}
+.neutral{background:#e9edf5;color:#34415a}
+.danger{background:#ffe2e2;color:#ad2929}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-bottom:20px}
+.card,.panel{background:#fff;padding:20px;border-radius:12px;box-shadow:0 3px 15px #1722380a}
+.card p{font-size:13px;color:#7b879b;margin-bottom:12px}
+.card h2{font-size:24px}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+input,select{padding:11px;border:1px solid #dce2ec;border-radius:7px;background:white;max-width:100%}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:760px}
+th,td{text-align:left;padding:13px 11px;border-bottom:1px solid #edf0f5;font-size:13px}
+th{background:#f8f9fc;color:#69758b}
+.status{padding:6px 9px;border-radius:20px;background:#d8f8e9;color:#16784e;font-size:11px}
+.actions{display:flex;gap:6px}
+.empty{text-align:center;padding:25px;color:#7b879b}
+.message{display:none;margin:12px 0;padding:12px;border-radius:7px;font-size:13px}
+.message.error{display:block;background:#ffe8e8;color:#a32222}
+.message.success{display:block;background:#dcf8e9;color:#176a48}
+@media(max-width:800px){
+.layout{display:block}
+.sidebar{width:100%}
+.sidebar nav{display:flex;overflow-x:auto}
+.sidebar a{white-space:nowrap}
+main{padding:16px}
+.cards{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+<div class="brand">Capitaxio</div>
+<div class="sub">ADMINISTRATION PANEL</div>
+<nav>
+<a href="admin.html">Dashboard</a>
+<a href="manage-users.html">Manage Users</a>
+<a href="invest-history.html">Investment History</a>
+<a href="active-investment-list.html" class="active">Active Investments</a>
+<a href="deposits.html">Deposits</a>
+<a href="withdrawals.html">Withdrawals</a>
+<a href="reward-history.html">Reward History</a>
+<a href="reports-analytics.html">Reports &amp; Analytics</a>
+<a href="system-configuration.html">System Configuration</a>
+<a href="admin-login.html">Logout</a>
+</nav>
+</aside>
+
+<main>
+<div class="header">
+<div>
+<h1>Active Investments</h1>
+<p class="muted">View and manage currently active investment plans.</p>
+</div>
+<button class="primary" id="addBtn" onclick="addInvestment()">+ Add Investment</button>
+</div>
+
+<div id="message" class="message"></div>
+
+<section class="cards">
+<div class="card"><p>Active Investments</p><h2 id="count">0</h2></div>
+<div class="card"><p>Total Invested</p><h2 id="total">Rs. 0</h2></div>
+<div class="card"><p>Unique Users</p><h2 id="users">0</h2></div>
+</section>
+
+<section class="panel">
+<h3>Investment Records</h3>
+
+<div class="tools">
+<input id="search" placeholder="Search user or investment ID" oninput="render()">
+
+<select id="filter" onchange="render()">
+<option value="All">All Statuses</option>
+<option value="Active">Active</option>
+<option value="Completed">Completed</option>
+<option value="Cancelled">Cancelled</option>
+</select>
+
+<button class="neutral" onclick="exportCSV()">Export CSV</button>
+<button class="neutral" onclick="loadRecords()">Refresh</button>
+</div>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Investment ID</th>
+<th>User</th>
+<th>Plan</th>
+<th>Amount</th>
+<th>Start Date</th>
+<th>Status</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="rows">
+<tr><td colspan="7" class="empty">Loading records...</td></tr>
+</tbody>
+</table>
+</div>
+
+<p class="muted" style="margin-top:14px">
+Records are loaded from Supabase.
+</p>
+</section>
+</main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+/* Supabase connection */
+const SUPABASE_URL = "https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+
+const db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+let records = [];
+let busy = false;
+
+function esc(value){
+    return String(value ?? "").replace(/[&<>"']/g, c => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+    }[c]));
+}
+
+function money(value){
+    return "Rs. " + Number(value || 0).toLocaleString("en-PK", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+    });
+}
+
+function showMessage(text, type="error"){
+    const box = document.getElementById("message");
+    box.textContent = text;
+    box.className = "message " + type;
+}
+
+function clearMessage(){
+    const box = document.getElementById("message");
+    box.textContent = "";
+    box.className = "message";
+}
+
+function setBusy(value){
+    busy = value;
+    document.getElementById("addBtn").disabled = value;
+}
+
+/* Read data from Supabase */
+async function loadRecords(){
+    clearMessage();
+
+    document.getElementById("rows").innerHTML =
+        '<tr><td colspan="7" class="empty">Loading records...</td></tr>';
+
+    const { data, error } = await db
+        .from("active_investments")
+        .select("id,user_name,plan_name,amount,start_date,status,created_at")
+        .order("created_at", { ascending: false });
+
+    if(error){
+        records = [];
+        render();
+        showMessage("Supabase error: " + error.message);
+        return;
+    }
+
+    records = data || [];
+    render();
+}
+
+/* Display records */
+function render(){
+    const searchValue = document
+        .getElementById("search").value
+        .toLowerCase()
+        .trim();
+
+    const filterValue = document.getElementById("filter").value;
+
+    const list = records.filter(record => {
+        const text = [
+            record.id,
+            record.user_name,
+            record.plan_name
+        ].join(" ").toLowerCase();
+
+        return text.includes(searchValue) &&
+            (filterValue === "All" || record.status === filterValue);
+    });
+
+    const active = list.filter(record => record.status === "Active");
+
+    document.getElementById("count").textContent = active.length;
+
+    document.getElementById("total").textContent = money(
+        active.reduce((sum, record) => sum + Number(record.amount || 0), 0)
+    );
+
+    document.getElementById("users").textContent =
+        new Set(active.map(record => record.user_name)).size;
+
+    document.getElementById("rows").innerHTML = list.length
+        ? list.map(record => `
+            <tr>
+                <td>${esc(record.id)}</td>
+                <td>${esc(record.user_name)}</td>
+                <td>${esc(record.plan_name)}</td>
+                <td>${money(record.amount)}</td>
+                <td>${esc(record.start_date)}</td>
+                <td>
+                    <span class="status"
+                    style="${record.status === "Active"
+                        ? ""
+                        : "background:#edf0f5;color:#526078"}">
+                    ${esc(record.status)}
+                    </span>
+                </td>
+                <td>
+                    <div class="actions">
+                        <button class="neutral"
+                            onclick="changeStatus('${esc(record.id)}')">
+                            Change
+                        </button>
+                        <button class="danger"
+                            onclick="removeRecord('${esc(record.id)}')">
+                            Delete
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join("")
+        : '<tr><td colspan="7" class="empty">No investment records found.</td></tr>';
+}
+
+/* Add record to Supabase */
+async function addInvestment(){
+    if(busy) return;
+
+    const user = prompt("User name:");
+    if(!user || !user.trim()) return;
+
+    const plan = prompt("Investment plan name:");
+    if(!plan || !plan.trim()) return;
+
+    const amount = Number(prompt("Investment amount in Rs:"));
+
+    if(!Number.isFinite(amount) || amount <= 0){
+        alert("Enter a valid amount.");
+        return;
+    }
+
+    const id = "INV-" + Date.now();
+    const startDate = new Date().toLocaleDateString("en-GB");
+
+    setBusy(true);
+    clearMessage();
+
+    const { error } = await db
+        .from("active_investments")
+        .insert({
+            id: id,
+            user_name: user.trim(),
+            plan_name: plan.trim(),
+            amount: amount,
+            start_date: startDate,
+            status: "Active"
+        });
+
+    setBusy(false);
+
+    if(error){
+        showMessage("Could not add investment: " + error.message);
+        return;
+    }
+
+    showMessage("Investment record added successfully.", "success");
+    await loadRecords();
+}
+
+/* Update status in Supabase */
+async function changeStatus(id){
+    if(busy) return;
+
+    const record = records.find(item => item.id === id);
+    if(!record) return;
+
+    const newStatus = prompt(
+        "Enter Active, Completed or Cancelled:",
+        record.status
+    );
+
+    if(newStatus === null) return;
+
+    if(!["Active", "Completed", "Cancelled"].includes(newStatus)){
+        alert("Invalid status.");
+        return;
+    }
+
+    setBusy(true);
+    clearMessage();
+
+    const { error } = await db
+        .from("active_investments")
+        .update({ status: newStatus })
+        .eq("id", id);
+
+    setBusy(false);
+
+    if(error){
+        showMessage("Could not update status: " + error.message);
+        return;
+    }
+
+    showMessage("Status updated successfully.", "success");
+    await loadRecords();
+}
+
+/* Delete record from Supabase */
+async function removeRecord(id){
+    if(busy) return;
+
+    if(!confirm("Delete this investment record from Supabase?")) return;
+
+    setBusy(true);
+    clearMessage();
+
+    const { error } = await db
+        .from("active_investments")
+        .delete()
+        .eq("id", id);
+
+    setBusy(false);
+
+    if(error){
+        showMessage("Could not delete record: " + error.message);
+        return;
+    }
+
+    showMessage("Record deleted successfully.", "success");
+    await loadRecords();
+}
+
+/* Export currently loaded records */
+function exportCSV(){
+    const data = [
+        ["Investment ID", "User", "Plan", "Amount", "Start Date", "Status"],
+        ...records.map(record => [
+            record.id,
+            record.user_name,
+            record.plan_name,
+            record.amount,
+            record.start_date,
+            record.status
+        ])
+    ];
+
+    const csv = data.map(row =>
+        row.map(value =>
+            '"' + String(value ?? "").replace(/"/g, '""') + '"'
+        ).join(",")
+    ).join("\n");
+
+    const blob = new Blob(["\uFEFF" + csv], {
+        type: "text/csv;charset=utf-8"
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "capitaxio-active-investments.csv";
+    link.click();
+
+    URL.revokeObjectURL(url);
+}
+
+/* Initial page load */
+loadRecords();
+</script>
+
+</body>
+</html>

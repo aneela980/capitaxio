@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio - User Profile</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f4f6fb;color:#20283a}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:235px;background:#172238;color:white;padding:23px 14px;flex-shrink:0}
+.brand{font-size:25px;font-weight:bold;color:#54dfb1;margin:0 10px 8px}
+.sub{font-size:11px;color:#aebbd0;margin:0 10px 25px;letter-spacing:2px}
+.sidebar a{display:block;padding:12px 14px;color:#d5ddec;text-decoration:none;border-radius:8px;margin:5px 0;font-size:14px}
+.sidebar a:hover,.sidebar a.active{background:#29405e;color:#54dfb1}
+.main{flex:1;min-width:0;padding:28px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:25px}
+h1{font-size:27px;margin-bottom:7px}
+.muted{color:#7e899e;font-size:13px;line-height:1.6}
+.admin{background:white;padding:11px 16px;border-radius:10px;font-size:13px}
+.panel{background:white;border-radius:13px;padding:22px;box-shadow:0 3px 15px #192b4710;margin-bottom:20px}
+.panel h3{font-size:17px;margin-bottom:18px}
+.profile-head{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.avatar{width:78px;height:78px;border-radius:50%;background:#d9f8ed;color:#087b5d;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:bold}
+.profile-info h2{font-size:22px;margin-bottom:8px}
+.pill{display:inline-block;padding:5px 10px;border-radius:20px;font-size:11px;background:#d9f8ed;color:#087b5d}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.field{background:#f8f9fc;border:1px solid #edf0f5;border-radius:9px;padding:14px}
+.field label{display:block;font-size:11px;color:#7e899e;margin-bottom:8px;text-transform:uppercase}
+.field p{font-size:14px;overflow-wrap:anywhere}
+input,select{width:100%;padding:11px 12px;border:1px solid #dfe4ee;border-radius:8px;font-size:13px;background:white}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.form-field label{display:block;font-size:12px;color:#657187;margin-bottom:7px}
+button{border:0;border-radius:7px;padding:11px 14px;cursor:pointer;font-weight:600;font-size:12px}
+button:disabled{opacity:.6;cursor:not-allowed}
+.btn-green{background:#d9f8ed;color:#087b5d}
+.btn-dark{background:#263751;color:white}
+.btn-red{background:#ffe3e7;color:#b91f3a}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.notice{font-size:12px;color:#7e899e;line-height:1.6;margin-top:12px}
+.alert{display:none;padding:12px 14px;border-radius:8px;font-size:13px;line-height:1.6;margin-bottom:16px}
+.alert.error{display:block;background:#fff0f0;color:#a52b35}
+.alert.success{display:block;background:#d9f8ed;color:#087b5d}
+.user-select{margin-bottom:20px}
+.user-select label{display:block;font-size:12px;color:#657187;margin-bottom:7px}
+.user-select select{max-width:500px}
+@media(max-width:850px){.sidebar{width:190px}.main{padding:18px}}
+@media(max-width:560px){.layout{display:block}.sidebar{width:100%;padding:15px}.sidebar a{display:inline-block;padding:9px}.sub{margin-bottom:10px}.main{padding:14px}.grid,.form-grid{grid-template-columns:1fr}.panel{padding:15px}h1{font-size:23px}}
+</style>
+</head>
+
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="brand">Capitaxio</div>
+  <div class="sub">ADMIN PANEL</div>
+  <a href="admin.html">Dashboard</a>
+  <a href="manage-users.html">Manage Users</a>
+  <a href="active-users.html">Active Users</a>
+  <a href="banned-users.html">Banned Users</a>
+  <a href="email-unverified.html">Email Unverified</a>
+  <a href="mobile-unverified.html">Mobile Unverified</a>
+  <a href="kyc-unverified.html">KYC Unverified</a>
+  <a href="kyc-pending.html">KYC Pending</a>
+  <a class="active" href="user-profile.html">User Profile</a>
+  <a href="deposits.html">Deposits</a>
+  <a href="withdrawals.html">Withdrawals</a>
+  <a href="system-configuration.html">System Configuration</a>
+  <a href="#" onclick="logout(event)">Logout</a>
+</aside>
+
+<main class="main">
+  <div class="top">
+    <div>
+      <h1>User Profile</h1>
+      <p class="muted">View and update user account information from your database.</p>
+    </div>
+    <div class="admin">🛡️ Administrator</div>
+  </div>
+
+  <div id="alert" class="alert"></div>
+
+  <section class="panel user-select">
+    <h3>Select User</h3>
+    <label for="userSelect">Database User</label>
+    <select id="userSelect" onchange="selectUser(this.value)">
+      <option value="">Loading users...</option>
+    </select>
+    <p class="notice">Select a user to view their profile details.</p>
+  </section>
+
+  <section class="panel">
+    <div class="profile-head">
+      <div class="avatar" id="avatar">U</div>
+      <div class="profile-info">
+        <h2 id="headingName">Select a user</h2>
+        <p class="muted" id="headingId">User ID: —</p>
+        <div style="margin-top:10px">
+          <span class="pill" id="statusPill">Unknown</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h3>Account Information</h3>
+    <div class="grid">
+      <div class="field"><label>User ID</label><p id="viewId">—</p></div>
+      <div class="field"><label>Full Name</label><p id="viewName">—</p></div>
+      <div class="field"><label>Email Address</label><p id="viewEmail">—</p></div>
+      <div class="field"><label>Mobile Number</label><p id="viewMobile">—</p></div>
+      <div class="field"><label>Registration Date</label><p id="viewDate">—</p></div>
+      <div class="field"><label>Account Status</label><p id="viewStatus">—</p></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h3>Edit User Profile</h3>
+    <form id="profileForm">
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="name">Full Name</label>
+          <input id="name" required maxlength="80">
+        </div>
+        <div class="form-field">
+          <label for="email">Email Address</label>
+          <input id="email" type="email" maxlength="120">
+        </div>
+        <div class="form-field">
+          <label for="mobile">Mobile Number</label>
+          <input id="mobile" maxlength="25">
+        </div>
+        <div class="form-field">
+          <label for="status">Account Status</label>
+          <select id="status">
+            <option value="active">Active</option>
+            <option value="banned">Banned</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn-green" id="saveBtn">Save Changes</button>
+        <button type="button" class="btn-dark" onclick="loadUsers()">Refresh Users</button>
+      </div>
+      <p class="notice">Changes are sent to Supabase. The database table and RLS policies must allow the update.</p>
+    </form>
+  </section>
+</main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+
+const client = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+// Database configuration
+const TABLE = "users";
+const ID_COLUMN = "id";
+const NAME_COLUMN = "full_name";
+const EMAIL_COLUMN = "email";
+const MOBILE_COLUMN = "mobile";
+const STATUS_COLUMN = "status";
+const DATE_COLUMN = "created_at";
+
+let users = [];
+let selectedUser = null;
+let saving = false;
+
+function showAlert(message, type = "error") {
+  const box = document.getElementById("alert");
+  box.textContent = message;
+  box.className = "alert " + type;
+}
+
+function clearAlert() {
+  const box = document.getElementById("alert");
+  box.textContent = "";
+  box.className = "alert";
+}
+
+function valueOf(user, column, fallback = "") {
+  return user && user[column] != null ? String(user[column]) : fallback;
+}
+
+function userName(user) {
+  return valueOf(user, NAME_COLUMN) ||
+         valueOf(user, "name") ||
+         valueOf(user, "username") ||
+         valueOf(user, "first_name") ||
+         "Unnamed User";
+}
+
+function userEmail(user) {
+  return valueOf(user, EMAIL_COLUMN);
+}
+
+function userMobile(user) {
+  return valueOf(user, MOBILE_COLUMN) ||
+         valueOf(user, "phone") ||
+         valueOf(user, "phone_number") ||
+         valueOf(user, "mobile_number");
+}
+
+function userStatus(user) {
+  const status = valueOf(user, STATUS_COLUMN, "active").toLowerCase();
+  return ["active", "banned", "pending"].includes(status) ? status : "pending";
+}
+
+function userDate(user) {
+  const date = valueOf(user, DATE_COLUMN);
+
+  if (!date) return "—";
+
+  const parsed = new Date(date);
+  return Number.isNaN(parsed.getTime())
+    ? "—"
+    : parsed.toISOString().slice(0, 10);
+}
+
+function initials(name) {
+  return name.trim().split(/\s+/).slice(0, 2)
+    .map(part => part[0] || "").join("").toUpperCase() || "U";
+}
+
+function renderProfile() {
+  if (!selectedUser) {
+    document.getElementById("headingName").textContent = "Select a user";
+    document.getElementById("headingId").textContent = "User ID: —";
+    document.getElementById("avatar").textContent = "U";
+
+    ["viewId","viewName","viewEmail","viewMobile","viewDate","viewStatus"]
+      .forEach(id => document.getElementById(id).textContent = "—");
+
+    document.getElementById("statusPill").textContent = "Unknown";
+    document.getElementById("profileForm").reset();
+    document.getElementById("saveBtn").disabled = true;
+    return;
+  }
+
+  const user = selectedUser;
+  const name = userName(user);
+  const email = userEmail(user);
+  const mobile = userMobile(user);
+  const status = userStatus(user);
+  const id = valueOf(user, ID_COLUMN);
+  const date = userDate(user);
+
+  document.getElementById("headingName").textContent = name;
+  document.getElementById("headingId").textContent = "User ID: " + id;
+  document.getElementById("avatar").textContent = initials(name);
+
+  document.getElementById("viewId").textContent = id || "—";
+  document.getElementById("viewName").textContent = name;
+  document.getElementById("viewEmail").textContent = email || "—";
+  document.getElementById("viewMobile").textContent = mobile || "—";
+  document.getElementById("viewDate").textContent = date;
+  document.getElementById("viewStatus").textContent = status;
+
+  const pill = document.getElementById("statusPill");
+  pill.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+  pill.style.background = status === "active" ? "#d9f8ed" :
+                          status === "banned" ? "#ffe3e7" : "#fff0d3";
+  pill.style.color = status === "active" ? "#087b5d" :
+                     status === "banned" ? "#b91f3a" : "#95600c";
+
+  document.getElementById("name").value = name === "Unnamed User" ? "" : name;
+  document.getElementById("email").value = email;
+  document.getElementById("mobile").value = mobile;
+  document.getElementById("status").value = status;
+  document.getElementById("saveBtn").disabled = false;
+}
+
+async function loadUsers() {
+  clearAlert();
+
+  const select = document.getElementById("userSelect");
+  select.innerHTML = '<option value="">Loading users...</option>';
+
+  try {
+    const { data, error } = await client
+      .from(TABLE)
+      .select("*")
+      .order(DATE_COLUMN, { ascending: false });
+
+    if (error) throw error;
+
+    users = data || [];
+
+    select.innerHTML = '<option value="">-- Select a user --</option>';
+
+    users.forEach(user => {
+      const id = valueOf(user, ID_COLUMN);
+      const option = document.createElement("option");
+      option.value = id;
+      option.textContent = userName(user) + " (" + id + ")";
+      select.appendChild(option);
+    });
+
+    if (!users.length) {
+      selectedUser = null;
+      renderProfile();
+      showAlert("Users table mein koi record nahi mila.", "error");
+      return;
+    }
+
+    const currentId = selectedUser
+      ? valueOf(selectedUser, ID_COLUMN)
+      : "";
+
+    const found = users.find(user =>
+      valueOf(user, ID_COLUMN) === currentId
+    );
+
+    select.value = found ? currentId : valueOf(users[0], ID_COLUMN);
+    selectedUser = found || users[0];
+
+    renderProfile();
+    showAlert("User records database se load ho gaye.", "success");
+
+  } catch (error) {
+    users = [];
+    selectedUser = null;
+    select.innerHTML = '<option value="">Unable to load users</option>';
+    renderProfile();
+
+    showAlert(
+      "Data load nahi hua: " + error.message +
+      ". Table/column names aur Supabase RLS policies check karein."
+    );
+  }
+}
+
+function selectUser(id) {
+  selectedUser = users.find(
+    user => valueOf(user, ID_COLUMN) === String(id)
+  ) || null;
+
+  clearAlert();
+  renderProfile();
+}
+
+document.getElementById("profileForm").addEventListener("submit", async function(event) {
+  event.preventDefault();
+
+  if (!selectedUser || saving) {
+    showAlert("Pehle user select karein.");
+    return;
+  }
+
+  const name = document.getElementById("name").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const mobile = document.getElementById("mobile").value.trim();
+  const status = document.getElementById("status").value;
+
+  if (!name) {
+    showAlert("Full name zaroor likhein.");
+    return;
+  }
+
+  const id = selectedUser[ID_COLUMN];
+  const updates = {
+    [NAME_COLUMN]: name,
+    [STATUS_COLUMN]: status
+  };
+
+  // Only update optional fields if they exist in this record.
+  if (EMAIL_COLUMN in selectedUser) updates[EMAIL_COLUMN] = email;
+  if (MOBILE_COLUMN in selectedUser) updates[MOBILE_COLUMN] = mobile;
+
+  saving = true;
+  const saveBtn = document.getElementById("saveBtn");
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Saving...";
+  clearAlert();
+
+  try {
+    const { data, error } = await client
+      .from(TABLE)
+      .update(updates)
+      .eq(ID_COLUMN, id)
+      .select();
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      throw new Error(
+        "Koi row update nahi hui. RLS policy ya admin permissions check karein."
+      );
+    }
+
+    selectedUser = data[0];
+    users = users.map(user =>
+      valueOf(user, ID_COLUMN) === String(id) ? data[0] : user
+    );
+
+    renderProfile();
+    showAlert("User profile database mein update ho gaya.", "success");
+
+  } catch (error) {
+    showAlert(
+      "Profile save nahi hua: " + error.message +
+      ". Apni table ke actual column names aur RLS UPDATE policy check karein."
+    );
+  } finally {
+    saving = false;
+    saveBtn.disabled = !selectedUser;
+    saveBtn.textContent = "Save Changes";
+  }
+});
+
+async function logout(event) {
+  event.preventDefault();
+
+  const { error } = await client.auth.signOut();
+
+  if (error) {
+    showAlert("Logout nahi hua: " + error.message);
+    return;
+  }
+
+  window.location.href = "admin-login.html";
+}
+
+renderProfile();
+loadUsers();
+</script>
+</body>
+</html>

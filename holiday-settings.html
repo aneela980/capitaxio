@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Holiday Setting | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "table": "site_settings",
+ "mode": "single",
+ "idKey": "id",
+ "idValue": 1,
+ "title": "Holiday Setting",
+ "description": "Chhutti ke dauran ka paigham. Abhi ye sirf save hota hai, user pages mein dikhane ka kaam alag se jorna hoga.",
+ "form": [
+  {
+   "key": "holiday_mode",
+   "label": "Holiday mode on",
+   "type": "checkbox"
+  },
+  {
+   "key": "holiday_message",
+   "label": "Holiday ka paigham",
+   "type": "textarea",
+   "maxlength": 400
+  }
+ ]
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

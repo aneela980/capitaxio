@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Ranking | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "title": "User Ranking",
+ "description": "Balance ke hisab se users ki list (sab se zyada upar).",
+ "table": "users",
+ "orderBy": "balance",
+ "ascending": false,
+ "columns": [
+  {
+   "key": "full_name",
+   "label": "Name",
+   "type": "text"
+  },
+  {
+   "key": "email",
+   "label": "Email",
+   "type": "text"
+  },
+  {
+   "key": "balance",
+   "label": "Balance",
+   "type": "money"
+  },
+  {
+   "key": "status",
+   "label": "Status",
+   "type": "badge"
+  }
+ ],
+ "searchKeys": [
+  "full_name",
+  "email"
+ ]
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

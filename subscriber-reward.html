@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subscriber Rewards | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root {
+  --bg:#f4f6fc;
+  --card:#fff;
+  --navy:#111b52;
+  --purple:#4938ff;
+  --text:#202747;
+  --muted:#77809a;
+  --border:#e6e9f2;
+  --green:#13884b;
+  --red:#d9384e;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:245px;background:var(--navy);color:white;padding:25px 15px;overflow-y:auto}
+.brand{font-size:23px;font-weight:800;padding:8px 12px 28px}
+.brand span{color:#9c91ff}
+.nav-label{font-size:11px;color:#a9b2df;padding:15px 12px 8px;text-transform:uppercase;letter-spacing:1px}
+.nav a{display:block;padding:13px 12px;margin:4px 0;border-radius:8px;color:#dce1ff;text-decoration:none;font-size:14px}
+.nav a:hover,.nav a.active{background:var(--purple);color:white}
+.main{margin-left:245px;padding:28px;min-width:0}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:26px}
+.topbar h2{margin:0;font-size:24px}
+.admin{font-size:13px;color:var(--muted);background:white;padding:12px 15px;border-radius:10px}
+.breadcrumb{color:var(--muted);font-size:13px;margin-top:8px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:22px}
+.stat,.panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
+.stat small{color:var(--muted)}
+.stat h3{font-size:27px;margin:12px 0 0;overflow-wrap:anywhere}
+.panel{padding:0;overflow:hidden}
+.panel-head{padding:20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.panel-head h3{margin:0;font-size:17px}
+.controls{display:flex;gap:10px;flex-wrap:wrap}
+input,select{padding:11px 12px;border:1px solid var(--border);border-radius:8px;background:white;color:var(--text);outline:none;max-width:100%}
+input:focus,select:focus{border-color:var(--purple)}
+button{border:0;border-radius:8px;padding:11px 14px;cursor:pointer;font-weight:700}
+button:disabled{opacity:.6;cursor:not-allowed}
+.primary{background:var(--purple);color:white}
+.secondary{background:#f0efff;color:var(--purple)}
+.danger{background:#fff0f1;color:var(--red)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;white-space:nowrap}
+th,td{text-align:left;padding:15px 17px;border-bottom:1px solid var(--border);font-size:13px}
+th{background:#fafbff;color:var(--muted);font-weight:700}
+.badge{display:inline-block;padding:6px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.active-badge{background:#e3f8ed;color:var(--green)}
+.paused-badge{background:#fff2d9;color:#a56a00}
+.actions{display:flex;gap:7px}
+.actions button{padding:7px 9px;font-size:12px}
+.empty{text-align:center;padding:35px;color:var(--muted)}
+.footer{padding:16px 20px;color:var(--muted);font-size:12px}
+.modal-backdrop{display:none;position:fixed;inset:0;background:#11152b99;align-items:center;justify-content:center;padding:18px;z-index:10}
+.modal{width:100%;max-width:440px;background:white;border-radius:15px;padding:23px}
+.modal h3{margin-top:0}
+.field{display:grid;gap:7px;margin:15px 0;font-size:13px;font-weight:700}
+.field input,.field select{width:100%}
+.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}
+.toast{position:fixed;bottom:20px;right:20px;background:#18214e;color:white;padding:13px 18px;border-radius:9px;display:none;z-index:20;max-width:90%;font-size:13px}
+.toast.error{background:#a32337}
+@media(max-width:850px){
+ .sidebar{width:205px}.main{margin-left:205px;padding:18px}
+ .stats{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+ .sidebar{position:static;width:100%;height:auto;padding:12px}
+ .brand{padding:8px 8px 12px}
+ .nav{display:flex;gap:6px;overflow-x:auto}
+ .nav-label{display:none}.nav a{white-space:nowrap;padding:10px}
+ .main{margin-left:0;padding:15px}
+ .topbar h2{font-size:20px}.admin{display:none}
+ .panel-head{align-items:stretch}
+ .controls{width:100%}.controls input,.controls select{flex:1;min-width:120px}
+}
+</style>
+</head>
+
+<body>
+
+<aside class="sidebar">
+  <div class="brand">CAPITA<span>XIO</span></div>
+  <div class="nav-label">Main Menu</div>
+  <nav class="nav">
+    <a href="admin.html">▦ &nbsp; Dashboard</a>
+    <a href="manage-users.html">♙ &nbsp; Manage Users</a>
+    <a href="deposits.html">↙ &nbsp; Deposits</a>
+    <a href="withdrawals.html">↗ &nbsp; Withdrawals</a>
+    <a href="referrals-management.html">♧ &nbsp; Manage Referral</a>
+    <a href="reward-settings.html">⚙ &nbsp; Reward Settings</a>
+    <a href="reward-history.html">◷ &nbsp; Reward History</a>
+    <a class="active" href="subscriber-reward.html">★ &nbsp; Subscriber Reward</a>
+    <a href="video-rewards.html">▶ &nbsp; Video Rewards</a>
+    <a href="team-rewards.html">♧ &nbsp; Team Rewards</a>
+    <a href="system-configuration.html">⚙ &nbsp; System Configuration</a>
+    <a href="#" id="logoutLink">⇥ &nbsp; Logout</a>
+  </nav>
+</aside>
+
+<main class="main">
+  <header class="topbar">
+    <div>
+      <h2>Subscriber Rewards</h2>
+      <div class="breadcrumb">Dashboard / Rewards / Subscriber Reward</div>
+    </div>
+    <div class="admin">⚙ &nbsp; Admin Panel</div>
+  </header>
+
+  <section class="stats">
+    <div class="stat">
+      <small>Total Reward Plans</small>
+      <h3 id="totalPlans">0</h3>
+    </div>
+    <div class="stat">
+      <small>Active Plans</small>
+      <h3 id="activePlans">0</h3>
+    </div>
+    <div class="stat">
+      <small>Total Reward Amount</small>
+      <h3 id="totalAmount">PKR 0</h3>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h3>Subscriber Reward Plans</h3>
+      <div class="controls">
+        <input id="search" type="search" placeholder="Search plan..." aria-label="Search plans">
+        <select id="statusFilter" aria-label="Filter by status">
+          <option value="all">All Statuses</option>
+          <option value="Active">Active</option>
+          <option value="Paused">Paused</option>
+        </select>
+        <button class="primary" id="addBtn" type="button">+ Add Reward</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Plan Name</th>
+            <th>Reward Amount</th>
+            <th>Period</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="rewardRows"></tbody>
+      </table>
+      <div id="emptyState" class="empty">Loading reward plans...</div>
+    </div>
+    <div class="footer">Subscriber reward plans are stored in your Supabase database.</div>
+  </section>
+</main>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <form class="modal" id="rewardForm">
+    <h3 id="modalTitle">Add Subscriber Reward</h3>
+
+    <input type="hidden" id="editId">
+
+    <label class="field">Plan Name
+      <input id="planName" required maxlength="60" placeholder="e.g. Monthly Subscriber">
+    </label>
+
+    <label class="field">Reward Amount (PKR)
+      <input id="amount" required type="number" min="0.01" step="0.01">
+    </label>
+
+    <label class="field">Reward Period
+      <select id="period">
+        <option>Daily</option>
+        <option>Weekly</option>
+        <option>Monthly</option>
+        <option>One-time</option>
+      </select>
+    </label>
+
+    <label class="field">Status
+      <select id="planStatus">
+        <option>Active</option>
+        <option>Paused</option>
+      </select>
+    </label>
+
+    <div class="modal-actions">
+      <button type="button" class="secondary" id="cancelBtn">Cancel</button>
+      <button type="submit" class="primary" id="savePlanBtn">Save Plan</button>
+    </div>
+  </form>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const SUPABASE_URL = "https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+let plans = [];
+
+const rows = document.getElementById("rewardRows");
+const emptyState = document.getElementById("emptyState");
+const backdrop = document.getElementById("modalBackdrop");
+const form = document.getElementById("rewardForm");
+const savePlanBtn = document.getElementById("savePlanBtn");
+const toast = document.getElementById("toast");
+
+function showToast(message, isError = false) {
+    toast.textContent = message;
+    toast.className = isError ? "toast error" : "toast";
+    toast.style.display = "block";
+
+    clearTimeout(window.toastTimer);
+    window.toastTimer = setTimeout(() => {
+        toast.style.display = "none";
+    }, 3500);
+}
+
+function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[char]);
+}
+
+function money(value) {
+    return "PKR " + Number(value || 0).toLocaleString("en-PK", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+    });
+}
+
+async function checkAdmin() {
+    const { data: sessionData, error: sessionError } =
+        await db.auth.getSession();
+
+    if (sessionError || !sessionData.session) {
+        window.location.href = "admin-login.html";
+        return false;
+    }
+
+    currentUser = sessionData.session.user;
+
+    const { data: admin, error: adminError } = await db
+        .from("admins")
+        .select("user_id, is_active")
+        .eq("user_id", currentUser.id)
+        .eq("is_active", true)
+        .maybeSingle();
+
+    if (adminError || !admin) {
+        await db.auth.signOut();
+        alert("Access denied. Active admin account required.");
+        window.location.href = "admin-login.html";
+        return false;
+    }
+
+    return true;
+}
+
+async function loadPlans() {
+    rows.innerHTML = "";
+    emptyState.hidden = false;
+    emptyState.textContent = "Loading reward plans...";
+
+    const { data, error } = await db
+        .from("subscriber_rewards")
+        .select("*")
+        .order("id", { ascending: false });
+
+    if (error) {
+        plans = [];
+        render();
+        emptyState.hidden = false;
+        emptyState.textContent = "Database error: " + error.message;
+        showToast("Reward plans load nahi hue: " + error.message, true);
+        return;
+    }
+
+    plans = data || [];
+    render();
+}
+
+function render() {
+    const query = document.getElementById("search").value.trim().toLowerCase();
+    const filter = document.getElementById("statusFilter").value;
+
+    const filtered = plans.filter(plan =>
+        String(plan.name).toLowerCase().includes(query) &&
+        (filter === "all" || plan.status === filter)
+    );
+
+    rows.innerHTML = filtered.map((plan, index) => `
+        <tr>
+            <td>${index + 1}</td>
+            <td>${escapeHTML(plan.name)}</td>
+            <td>${money(plan.amount)}</td>
+            <td>${escapeHTML(plan.period)}</td>
+            <td>
+                <span class="badge ${
+                    plan.status === "Active" ? "active-badge" : "paused-badge"
+                }">${escapeHTML(plan.status)}</span>
+            </td>
+            <td>
+                <div class="actions">
+                    <button class="secondary" type="button"
+                        data-action="edit" data-id="${escapeHTML(plan.id)}">
+                        Edit
+                    </button>
+                    <button class="danger" type="button"
+                        data-action="delete" data-id="${escapeHTML(plan.id)}">
+                        Delete
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join("");
+
+    emptyState.hidden = filtered.length !== 0;
+
+    if (filtered.length === 0) {
+        emptyState.textContent = plans.length === 0
+            ? "No reward plans found. Click Add Reward to create one."
+            : "No matching reward plans found.";
+    }
+
+    document.getElementById("totalPlans").textContent = plans.length;
+
+    document.getElementById("activePlans").textContent =
+        plans.filter(plan => plan.status === "Active").length;
+
+    document.getElementById("totalAmount").textContent = money(
+        plans.reduce((sum, plan) => sum + Number(plan.amount || 0), 0)
+    );
+}
+
+function openModal(plan = null) {
+    form.reset();
+
+    document.getElementById("editId").value = plan ? String(plan.id) : "";
+
+    document.getElementById("modalTitle").textContent =
+        plan ? "Edit Subscriber Reward" : "Add Subscriber Reward";
+
+    if (plan) {
+        document.getElementById("planName").value = plan.name;
+        document.getElementById("amount").value = plan.amount;
+        document.getElementById("period").value = plan.period;
+        document.getElementById("planStatus").value = plan.status;
+    }
+
+    backdrop.style.display = "flex";
+}
+
+function closeModal() {
+    backdrop.style.display = "none";
+}
+
+async function savePlan(event) {
+    event.preventDefault();
+
+    if (!form.reportValidity()) return;
+
+    if (!currentUser) {
+        showToast("Admin login required.", true);
+        return;
+    }
+
+    const editId = document.getElementById("editId").value;
+
+    const plan = {
+        name: document.getElementById("planName").value.trim(),
+        amount: Number(document.getElementById("amount").value),
+        period: document.getElementById("period").value,
+        status: document.getElementById("planStatus").value,
+        updated_by: currentUser.id,
+        updated_at: new Date().toISOString()
+    };
+
+    if (!plan.name || !Number.isFinite(plan.amount) || plan.amount <= 0) {
+        showToast("Valid plan name and amount enter karein.", true);
+        return;
+    }
+
+    savePlanBtn.disabled = true;
+    savePlanBtn.textContent = "Saving...";
+
+    let result;
+
+    if (editId) {
+        result = await db
+            .from("subscriber_rewards")
+            .update(plan)
+            .eq("id", editId)
+            .select();
+    } else {
+        plan.created_by = currentUser.id;
+
+        result = await db
+            .from("subscriber_rewards")
+            .insert(plan)
+            .select();
+    }
+
+    savePlanBtn.disabled = false;
+    savePlanBtn.textContent = "Save Plan";
+
+    if (result.error) {
+        showToast("Save nahi hua: " + result.error.message, true);
+        return;
+    }
+
+    if (!result.data || result.data.length === 0) {
+        showToast("Save nahi hua. Admin permission check karein.", true);
+        return;
+    }
+
+    closeModal();
+    showToast(editId ? "Reward plan updated successfully!" : "Reward plan added successfully!");
+    await loadPlans();
+}
+
+async function deletePlan(id) {
+    const plan = plans.find(item => String(item.id) === String(id));
+
+    if (!plan) return;
+
+    if (!confirm('Kya aap "' + plan.name + '" delete karna chahte hain?')) {
+        return;
+    }
+
+    const { error } = await db
+        .from("subscriber_rewards")
+        .delete()
+        .eq("id", id);
+
+    if (error) {
+        showToast("Delete nahi hua: " + error.message, true);
+        return;
+    }
+
+    showToast("Reward plan deleted successfully!");
+    await loadPlans();
+}
+
+document.getElementById("addBtn").addEventListener("click", () => {
+    openModal();
+});
+
+document.getElementById("cancelBtn").addEventListener("click", closeModal);
+
+document.getElementById("search").addEventListener("input", render);
+
+document.getElementById("statusFilter").addEventListener("change", render);
+
+form.addEventListener("submit", savePlan);
+
+backdrop.addEventListener("click", event => {
+    if (event.target === backdrop) closeModal();
+});
+
+rows.addEventListener("click", event => {
+    const button = event.target.closest("button[data-action]");
+    if (!button) return;
+
+    const id = button.dataset.id;
+
+    if (button.dataset.action === "edit") {
+        const plan = plans.find(item => String(item.id) === String(id));
+        if (plan) openModal(plan);
+    }
+
+    if (button.dataset.action === "delete") {
+        deletePlan(id);
+    }
+});
+
+document.getElementById("logoutLink").addEventListener("click", async event => {
+    event.preventDefault();
+    await db.auth.signOut();
+    window.location.href = "admin-login.html";
+});
+
+async function startPage() {
+    const allowed = await checkAdmin();
+
+    if (allowed) {
+        await loadPlans();
+    }
+}
+
+startPage();
+</script>
+
+</body>
+</html>

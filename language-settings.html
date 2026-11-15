@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Language | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "table": "site_settings",
+ "mode": "single",
+ "idKey": "id",
+ "idValue": 1,
+ "description": "Website ki zubaan.",
+ "form": [
+  {
+   "key": "language",
+   "label": "Default Language",
+   "type": "select",
+   "options": [
+    {
+     "v": "en",
+     "l": "English"
+    },
+    {
+     "v": "ur",
+     "l": "Urdu"
+    }
+   ],
+   "default": "en"
+  }
+ ],
+ "title": "Language"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

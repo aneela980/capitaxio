@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Capitaxio | Prediction Requests</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:24px;background:#081326;color:white;font-family:Arial}
+main{max-width:1200px;margin:auto}h1{margin-bottom:8px}.sub{color:#9aabc5}
+.panel{background:#13213a;border:1px solid #263b5e;border-radius:12px;padding:18px;margin:18px 0}
+input,textarea,select{width:100%;background:#081326;color:white;border:1px solid #304767;padding:11px;border-radius:7px;margin:6px 0}
+button{padding:9px 13px;border:0;border-radius:6px;color:white;cursor:pointer;margin:2px}
+.add,.approve{background:#159b68}.reject{background:#d64b59}.del{background:#b02c3b}.refresh{background:#1769c2}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:750px}th,td{text-align:left;padding:12px;border-bottom:1px solid #263b5e;font-size:13px}
+th{background:#102b68;color:#65d6f4}.muted{color:#9aabc5}
+@media(max-width:600px){body{padding:14px}.row{grid-template-columns:1fr}}
+</style></head>
+<body><main>
+<h1>Prediction Requests</h1><p class="sub">Manage user prediction requests.</p>
+<div class="panel">
+<h3>Add New Request</h3>
+<div class="row">
+<input id="uid" placeholder="User ID">
+<input id="name" placeholder="User Name">
+</div>
+<div class="row">
+<input id="market" placeholder="Prediction / Market">
+<select id="choice"><option value="yes">Yes</option><option value="no">No</option><option value="other">Other</option></select>
+</div>
+<textarea id="details" placeholder="Request details"></textarea>
+<button class="add" onclick="addRequest()">Add Request</button>
+</div>
+<div class="panel">
+<input id="search" placeholder="Search requests..." oninput="render()">
+<button class="refresh" onclick="loadData()">Refresh</button>
+<p class="muted" id="msg">Connecting...</p>
+</div>
+<div class="panel tablewrap"><table>
+<thead><tr><th>ID</th><th>User ID</th><th>Name</th><th>Prediction</th><th>Choice</th><th>Details</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+<tbody id="body"></tbody></table></div>
+</main>
+<script>
+const db=window.supabase.createClient(
+"https://zwffgoenruzcctkyptjg.supabase.co",
+"sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar"
+);
+let records=[];
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+async function loadData(){
+msg.textContent="Loading...";
+let {data,error}=await db.from("prediction_requests").select("*").order("created_at",{ascending:false});
+if(error){msg.textContent="Error: "+error.message;return;}
+records=data||[];msg.textContent=records.length+" requests found.";render();
+}
+async function addRequest(){
+let payload={user_id:uid.value.trim(),user_name:name.value.trim(),prediction:market.value.trim(),choice:choice.value,details:details.value.trim(),status:"pending"};
+if(!payload.prediction){alert("Prediction field is required.");return;}
+let {error}=await db.from("prediction_requests").insert(payload);
+if(error){alert(error.message);return;}
+uid.value=name.value=market.value=details.value="";alert("Request added.");loadData();
+}
+function render(){
+let q=search.value.toLowerCase();
+let list=records.filter(r=>JSON.stringify(r).toLowerCase().includes(q));
+if(!list.length){body.innerHTML='<tr><td colspan="9">No requests found.</td></tr>';return;}
+body.innerHTML=list.map(r=>`<tr>
+<td>${esc(r.id)}</td><td>${esc(r.user_id)}</td><td>${esc(r.user_name)}</td>
+<td>${esc(r.prediction)}</td><td>${esc(r.choice)}</td><td>${esc(r.details)}</td>
+<td>${esc(r.status)}</td><td>${r.created_at?new Date(r.created_at).toLocaleDateString():"—"}</td>
+<td><button class="approve" onclick="setStatus(${Number(r.id)},'approved')">Approve</button>
+<button class="reject" onclick="setStatus(${Number(r.id)},'rejected')">Reject</button>
+<button class="del" onclick="removeRow(${Number(r.id)})">Delete</button></td></tr>`).join("");
+}
+async function setStatus(id,status){
+let {error}=await db.from("prediction_requests").update({status}).eq("id",id);
+if(error){alert(error.message);return;}loadData();
+}
+async function removeRow(id){
+if(!confirm("Delete this request?"))return;
+let {error}=await db.from("prediction_requests").delete().eq("id",id);
+if(error){alert(error.message);return;}loadData();
+}
+loadData();
+</script></body></html>

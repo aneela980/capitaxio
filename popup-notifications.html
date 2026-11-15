@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Popup Notifications | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "table": "site_settings",
+ "mode": "single",
+ "idKey": "id",
+ "idValue": 1,
+ "description": "Dashboard kholte hi users ko ek baar dikhne wala popup paigham (har session mein ek baar).",
+ "form": [
+  {
+   "key": "popup_enabled",
+   "label": "Popup on rakhein",
+   "type": "checkbox"
+  },
+  {
+   "key": "popup_title",
+   "label": "Popup ka title",
+   "type": "text",
+   "maxlength": 100
+  },
+  {
+   "key": "popup_message",
+   "label": "Popup ka paigham",
+   "type": "textarea",
+   "maxlength": 600
+  }
+ ],
+ "title": "Popup Notifications"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

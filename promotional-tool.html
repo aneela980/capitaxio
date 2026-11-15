@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Promotional Tool | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "description": "Marketing ka maal (tasveeren aur caption) jo users apne doston ke saath share kar sakein.",
+ "table": "promo_materials",
+ "orderBy": "created_at",
+ "columns": [
+  {
+   "key": "title",
+   "label": "Title",
+   "type": "text"
+  },
+  {
+   "key": "caption",
+   "label": "Caption",
+   "type": "text"
+  },
+  {
+   "key": "image_url",
+   "label": "Image",
+   "type": "text"
+  },
+  {
+   "key": "is_active",
+   "label": "Active",
+   "type": "bool"
+  },
+  {
+   "key": "created_at",
+   "label": "Date",
+   "type": "date"
+  }
+ ],
+ "form": [
+  {
+   "key": "title",
+   "label": "Title",
+   "type": "text",
+   "required": true,
+   "maxlength": 120
+  },
+  {
+   "key": "caption",
+   "label": "Caption",
+   "type": "textarea",
+   "maxlength": 500
+  },
+  {
+   "key": "image_url",
+   "label": "Tasveer ka link",
+   "type": "url",
+   "maxlength": 400,
+   "placeholder": "https://..."
+  },
+  {
+   "key": "is_active",
+   "label": "Active",
+   "type": "checkbox",
+   "default": true
+  }
+ ],
+ "canAdd": true,
+ "canEdit": true,
+ "canDelete": true,
+ "toggleKey": "is_active",
+ "searchKeys": [
+  "title",
+  "caption"
+ ],
+ "addLabel": "+ New Item",
+ "title": "Promotional Tool"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

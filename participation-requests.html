@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio | Participation Requests</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#081326;color:#fff;font-family:Arial,sans-serif;padding:25px}
+.container{max-width:1200px;margin:auto}
+h1{margin:0 0 8px;color:#fff}
+.sub{color:#9aabc5;margin-bottom:25px}
+.panel{background:#13213a;border:1px solid #263b5e;border-radius:12px;padding:20px;margin-bottom:20px}
+.stats{display:flex;gap:15px;flex-wrap:wrap;margin-bottom:20px}
+.stat{background:#13213a;border:1px solid #263b5e;padding:18px;border-radius:10px;flex:1;min-width:140px}
+.stat span{display:block;color:#9aabc5;font-size:13px}
+.stat strong{display:block;font-size:25px;margin-top:8px}
+input,select{background:#081326;border:1px solid #304767;color:white;padding:11px;border-radius:7px;outline:none}
+input{width:100%;max-width:350px}
+button{border:0;border-radius:6px;padding:9px 13px;color:white;cursor:pointer;margin:2px}
+.approve{background:#159b68}.reject{background:#d64b59}.delete{background:#b02c3b}.refresh{background:#1769c2}
+table{width:100%;border-collapse:collapse;min-width:850px}
+th,td{padding:13px;text-align:left;border-bottom:1px solid #263b5e;font-size:13px}
+th{color:#65d6f4;background:#102b68}
+.table-wrap{overflow-x:auto}
+.status{padding:5px 9px;border-radius:20px;background:#33445c;font-size:12px}
+.empty{text-align:center;color:#9aabc5;padding:25px}
+.message{color:#9aabc5;margin-top:12px;font-size:13px}
+@media(max-width:600px){body{padding:14px}.panel{padding:12px}h1{font-size:23px}}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Participation Requests</h1>
+<p class="sub">Manage and review campaign participation requests.</p>
+
+<div class="stats">
+ <div class="stat"><span>Total Requests</span><strong id="total">0</strong></div>
+ <div class="stat"><span>Pending</span><strong id="pending">0</strong></div>
+ <div class="stat"><span>Approved</span><strong id="approved">0</strong></div>
+ <div class="stat"><span>Rejected</span><strong id="rejected">0</strong></div>
+</div>
+
+<div class="panel">
+ <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+  <input id="search" placeholder="Search name, email or campaign..." oninput="render()">
+  <div>
+   <select id="filter" onchange="render()">
+    <option value="all">All Requests</option>
+    <option value="pending">Pending</option>
+    <option value="approved">Approved</option>
+    <option value="rejected">Rejected</option>
+   </select>
+   <button class="refresh" onclick="loadRequests()">Refresh</button>
+  </div>
+ </div>
+ <p class="message" id="message">Connecting to database...</p>
+</div>
+
+<div class="panel">
+ <div class="table-wrap">
+ <table>
+ <thead><tr>
+ <th>ID</th><th>User ID</th><th>Name</th><th>Email</th>
+ <th>Campaign</th><th>Status</th><th>Date</th><th>Actions</th>
+ </tr></thead>
+ <tbody id="rows"><tr><td colspan="8" class="empty">Loading...</td></tr></tbody>
+ </table>
+ </div>
+</div>
+</div>
+
+<script>
+const SUPABASE_URL="https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY="sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+let requests=[];
+
+function esc(value){
+ return String(value??"").replace(/[&<>"']/g,c=>({
+ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+
+async function loadRequests(){
+ const msg=document.getElementById("message");
+ msg.textContent="Loading requests...";
+ const {data,error}=await db.from("participation_requests")
+ .select("*").order("created_at",{ascending:false});
+
+ if(error){
+  msg.textContent="Error: "+error.message;
+  document.getElementById("rows").innerHTML=
+  `<tr><td colspan="8" class="empty">Could not load requests.</td></tr>`;
+  return;
+ }
+ requests=data||[];
+ updateStats();
+ render();
+ msg.textContent=requests.length+" request(s) loaded.";
+}
+
+function updateStats(){
+ document.getElementById("total").textContent=requests.length;
+ document.getElementById("pending").textContent=requests.filter(x=>x.status==="pending").length;
+ document.getElementById("approved").textContent=requests.filter(x=>x.status==="approved").length;
+ document.getElementById("rejected").textContent=requests.filter(x=>x.status==="rejected").length;
+}
+
+function render(){
+ const q=document.getElementById("search").value.toLowerCase();
+ const f=document.getElementById("filter").value;
+ const filtered=requests.filter(x=>{
+  const text=[x.user_id,x.participant_name,x.email,x.campaign_id].join(" ").toLowerCase();
+  return text.includes(q)&&(f==="all"||x.status===f);
+ });
+ const tbody=document.getElementById("rows");
+
+ if(!filtered.length){
+  tbody.innerHTML='<tr><td colspan="8" class="empty">No participation requests found.</td></tr>';
+  return;
+ }
+
+ tbody.innerHTML=filtered.map(x=>`
+ <tr>
+ <td>${esc(x.id)}</td>
+ <td>${esc(x.user_id)}</td>
+ <td>${esc(x.participant_name)}</td>
+ <td>${esc(x.email)}</td>
+ <td>${esc(x.campaign_id)}</td>
+ <td><span class="status">${esc(x.status)}</span></td>
+ <td>${x.created_at?new Date(x.created_at).toLocaleDateString():"—"}</td>
+ <td>
+ ${x.status==="pending"?`
+ <button class="approve" onclick="changeStatus(${Number(x.id)},'approved')">Approve</button>
+ <button class="reject" onclick="changeStatus(${Number(x.id)},'rejected')">Reject</button>`:""}
+ <button class="delete" onclick="deleteRequest(${Number(x.id)})">Delete</button>
+ </td>
+ </tr>`).join("");
+}
+
+async function changeStatus(id,status){
+ if(!confirm("Are you sure you want to "+status+" this request?"))return;
+ const {error}=await db.from("participation_requests")
+ .update({status:status}).eq("id",id);
+ if(error){alert(error.message);return;}
+ alert("Request "+status+" successfully.");
+ loadRequests();
+}
+
+async function deleteRequest(id){
+ if(!confirm("Are you sure you want to delete this request?"))return;
+ const {error}=await db.from("participation_requests").delete().eq("id",id);
+ if(error){alert(error.message);return;}
+ alert("Request deleted.");
+ loadRequests();
+}
+
+loadRequests();
+</script>
+</body>
+</html>

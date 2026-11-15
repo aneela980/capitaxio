@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAQ Section | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "description": "Aam sawal aur un ke jawab. Users ko faq.html par nazar aate hain. Chhota sort number pehle dikhta hai.",
+ "table": "faqs",
+ "orderBy": "sort_order",
+ "ascending": true,
+ "columns": [
+  {
+   "key": "sort_order",
+   "label": "Order",
+   "type": "text"
+  },
+  {
+   "key": "question",
+   "label": "Question",
+   "type": "text"
+  },
+  {
+   "key": "answer",
+   "label": "Answer",
+   "type": "text"
+  },
+  {
+   "key": "is_active",
+   "label": "Active",
+   "type": "bool"
+  }
+ ],
+ "form": [
+  {
+   "key": "question",
+   "label": "Sawal",
+   "type": "text",
+   "required": true,
+   "maxlength": 250
+  },
+  {
+   "key": "answer",
+   "label": "Jawab",
+   "type": "textarea",
+   "required": true,
+   "maxlength": 2000
+  },
+  {
+   "key": "sort_order",
+   "label": "Sort number",
+   "type": "number",
+   "default": 0
+  },
+  {
+   "key": "is_active",
+   "label": "Active",
+   "type": "checkbox",
+   "default": true
+  }
+ ],
+ "canAdd": true,
+ "canEdit": true,
+ "canDelete": true,
+ "toggleKey": "is_active",
+ "searchKeys": [
+  "question",
+  "answer"
+ ],
+ "addLabel": "+ New FAQ",
+ "title": "FAQ Section"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

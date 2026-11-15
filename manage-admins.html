@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Admins | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "title": "Manage Admins",
+ "description": "Admin panel chalane wale log. Naya admin jodne se pehle us ka email Supabase ke Authentication mein hona zaroori hai. Sirf super_admin badal sakta hai.",
+ "table": "admins",
+ "orderBy": "created_at",
+ "ascending": true,
+ "columns": [
+  {
+   "key": "full_name",
+   "label": "Name",
+   "type": "text"
+  },
+  {
+   "key": "role",
+   "label": "Role",
+   "type": "badge"
+  },
+  {
+   "key": "is_active",
+   "label": "Active",
+   "type": "bool"
+  },
+  {
+   "key": "created_at",
+   "label": "Joined",
+   "type": "date"
+  }
+ ],
+ "form": [
+  {
+   "key": "full_name",
+   "label": "Full Name",
+   "type": "text",
+   "required": true,
+   "maxlength": 100
+  },
+  {
+   "key": "role",
+   "label": "Role",
+   "type": "select",
+   "options": [
+    "super_admin",
+    "admin",
+    "support"
+   ],
+   "default": "admin"
+  },
+  {
+   "key": "is_active",
+   "label": "Active",
+   "type": "checkbox",
+   "default": true
+  }
+ ],
+ "canEdit": true,
+ "toggleKey": "is_active",
+ "searchKeys": [
+  "full_name",
+  "role"
+ ],
+ "rpcAdd": {
+  "name": "add_admin",
+  "params": {
+   "p_email": "email",
+   "p_full_name": "full_name",
+   "p_role": "role"
+  },
+  "fields": [
+   {
+    "key": "email",
+    "label": "Admin ki Email",
+    "type": "email",
+    "required": true,
+    "help": "Ye email pehle Supabase, Authentication, Users mein bani hui honi chahiye."
+   },
+   {
+    "key": "full_name",
+    "label": "Full Name",
+    "type": "text",
+    "required": true,
+    "maxlength": 100
+   },
+   {
+    "key": "role",
+    "label": "Role",
+    "type": "select",
+    "options": [
+     "admin",
+     "support",
+     "super_admin"
+    ],
+    "default": "admin"
+   }
+  ]
+ },
+ "addLabel": "+ Add Admin"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

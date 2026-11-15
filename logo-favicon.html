@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logo & Favicon | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "table": "site_settings",
+ "mode": "single",
+ "idKey": "id",
+ "idValue": 1,
+ "title": "Logo & Favicon",
+ "description": "Logo aur favicon ke links (image upload abhi nahi, sirf link).",
+ "form": [
+  {
+   "key": "logo_url",
+   "label": "Logo ka link",
+   "type": "url",
+   "maxlength": 300,
+   "placeholder": "https://..."
+  },
+  {
+   "key": "favicon_url",
+   "label": "Favicon ka link",
+   "type": "url",
+   "maxlength": 300,
+   "placeholder": "https://..."
+  }
+ ]
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

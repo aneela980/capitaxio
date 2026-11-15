@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b171b">
+<title>Capitaxio | Support</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#0b171b;--panel:#13252c;--green:#a5df43;--text:#f4f7fa;--muted:#9aadb5;--border:#304750}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:var(--bg);color:var(--text)}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:255px;background:var(--panel);padding:25px 16px;position:fixed;top:0;bottom:0;left:0;overflow-y:auto;border-right:1px solid var(--border);z-index:10}
+.logo{font-size:25px;font-weight:bold;color:var(--green);margin:5px 10px 30px}
+.logo span{color:var(--text)}
+.menu-title{font-size:11px;color:var(--muted);margin:20px 10px 10px}
+.sidebar a{display:block;text-decoration:none;color:var(--muted);padding:12px 13px;border-radius:8px;margin:5px 0;font-size:14px}
+.sidebar a:hover,.sidebar a.active{background:#263c39;color:var(--green)}
+.main{margin-left:255px;width:calc(100% - 255px);padding:28px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.topbar h2{font-size:23px}
+.menu-btn{display:none;background:var(--panel);color:var(--green);border:1px solid var(--border);padding:9px 13px;border-radius:7px;cursor:pointer}
+.muted{color:var(--muted);font-size:13px;line-height:1.6}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:22px}
+.stat{background:var(--panel);border:1px solid var(--border);border-radius:13px;padding:18px}
+.stat p{color:var(--muted);font-size:12px;margin-bottom:10px}
+.stat h3{font-size:22px;color:var(--green);overflow-wrap:anywhere}
+.msg{display:none;padding:13px 15px;border-radius:10px;margin-bottom:18px;font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+.msg.show{display:block}.msg.ok{background:#1b3020;color:#c7ffb1}.msg.err{background:#3a1920;color:#ffb9c2}
+h3.sec{font-size:18px;margin:22px 0 14px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.task{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.task .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.task h4{font-size:16px;line-height:1.4;overflow-wrap:anywhere}
+.tag{font-size:11px;padding:4px 9px;border-radius:20px;background:#263c39;color:var(--green);white-space:nowrap}
+.task p{color:var(--muted);font-size:13px;line-height:1.7;overflow-wrap:anywhere}
+.reward{color:var(--green);font-weight:bold;font-size:17px}
+.btn{border:0;border-radius:9px;padding:12px 16px;font-weight:bold;font-size:14px;cursor:pointer;background:var(--green);color:#142017}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn.claim{background:#fff;color:#142017}
+.empty{text-align:center;color:var(--muted);padding:30px;background:var(--panel);border:1px solid var(--border);border-radius:13px}
+.notice{margin-top:22px;border-left:3px solid var(--green);padding:13px 15px;background:#a5df430d;color:var(--muted);font-size:12px;line-height:1.7;border-radius:0 9px 9px 0}
+@media(max-width:850px){
+.sidebar{transform:translateX(-100%);transition:.25s}.sidebar.open{transform:translateX(0)}
+.main{margin-left:0;width:100%;padding:18px}.menu-btn{display:block}
+.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr}
+}
+
+.form{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:22px}
+.form input,.form textarea{width:100%;padding:13px;margin-top:10px;background:#0b171b;border:1px solid var(--border);border-radius:9px;color:var(--text);outline:none;font-size:14px;font-family:Arial,sans-serif}
+.form textarea{min-height:100px;resize:vertical}.form input:focus,.form textarea:focus{border-color:var(--green)}
+.trow{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;cursor:pointer;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.trow:hover{border-color:var(--green)}.trow b{overflow-wrap:anywhere}
+.st{font-size:11px;padding:4px 9px;border-radius:20px;background:#263c39;color:var(--green);white-space:nowrap}
+.st.open{background:#3a3318;color:#f0cf6b}.st.closed{background:#26363c;color:var(--muted)}
+.thread{display:flex;flex-direction:column;gap:10px;margin:14px 0}
+.m{padding:12px 14px;border-radius:12px;font-size:14px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;max-width:90%}
+.m.user{background:#1b3033;align-self:flex-end}.m.admin{background:#263c39;align-self:flex-start;border:1px solid #526d34}
+.m small{display:block;color:var(--muted);font-size:11px;margin-top:6px}
+</style>
+</head>
+
+<body style="visibility:hidden">
+<div class="layout">
+<aside class="sidebar" id="sidebar">
+    <div class="logo">C<span>apitaxio</span></div>
+    <div class="menu-title">MAIN MENU</div>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="profile.html">Profile Setting</a>
+    <a href="tasks.html">Tasks</a>
+    <a href="spin.html">Free Spin</a>
+    <a href="redeem.html">Promo Code</a>
+    <a href="support.html" class="active">Support</a>
+    <a href="deposit.html">Deposit</a>
+    <a href="deposit-history.html">Deposit History</a>
+    <a href="withdrawal.html">Withdraw</a>
+    <a href="withdraw-history.html">Withdraw History</a>
+    <a href="transactions.html">Transactions</a>
+    <a href="team.html">My Team</a>
+    <div class="menu-title">ACCOUNT</div>
+    <a href="verify.html">Verify Account</a>
+    <a href="password-change.html">Password Change</a>
+    <a href="#" id="logoutLink">Logout</a>
+</aside>
+
+<main class="main">
+<div class="topbar"><div>
+<button class="menu-btn" id="menuBtn">☰ Menu</button>
+<h2 style="margin-top:10px">Support</h2>
+<p class="muted">Apna masla likhein, hamari team jawab degi.</p>
+</div></div>
+
+<div class="msg" id="msg" role="status"></div>
+
+<div id="listView">
+  <div class="form">
+    <b>Naya masla</b>
+    <input id="subject" maxlength="120" placeholder="Masle ka mauzu">
+    <textarea id="message" maxlength="2000" placeholder="Apna masla tafseel se likhein..."></textarea>
+    <button class="btn" id="createBtn" type="button" style="margin-top:12px">Bhejein</button>
+  </div>
+  <h3 class="sec">Aap ke Tickets</h3>
+  <div id="tickets"><div class="empty">Loading...</div></div>
+</div>
+
+<div id="threadView" style="display:none">
+  <button class="btn" id="backBtn" type="button" style="background:#263c39;color:var(--green)">← Wapas</button>
+  <h3 class="sec" id="tTitle"></h3>
+  <div class="thread" id="thread"></div>
+  <div class="form" id="replyBox">
+    <textarea id="replyText" maxlength="2000" placeholder="Jawab likhein..."></textarea>
+    <button class="btn" id="replyBtn" type="button" style="margin-top:12px">Bhejein</button>
+  </div>
+</div>
+</main>
+</div>
+
+<script>
+const db = window.supabase.createClient("https://zwffgoenruzcctkyptjg.supabase.co", "sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar");
+const LOGIN_PAGE = "index.html";
+let profile = null, current = null;
+
+document.getElementById("menuBtn").addEventListener("click", function () { document.getElementById("sidebar").classList.toggle("open"); });
+document.getElementById("logoutLink").addEventListener("click", async function (e) { e.preventDefault(); await db.auth.signOut(); location.href = LOGIN_PAGE; });
+
+function showMsg(t, ok) { const m = document.getElementById("msg"); m.textContent = t || ""; m.className = "msg" + (t ? " show " + (ok ? "ok" : "err") : ""); }
+function el(t, c, x) { const e = document.createElement(t); if (c) e.className = c; if (x !== undefined) e.textContent = x; return e; }
+
+async function loadProfile(user) {
+  const cols = "id, full_name, status";
+  let { data: p, error } = await db.from("users").select(cols).eq("auth_user_id", user.id).maybeSingle();
+  if (error) throw error;
+  if (!p) {
+    const meta = user.user_metadata || {};
+    const { error: e2 } = await db.rpc("complete_signup", { p_full_name: meta.full_name || "", p_mobile: meta.mobile || "", p_ref: meta.ref || "" });
+    if (e2) throw e2;
+    const again = await db.from("users").select(cols).eq("auth_user_id", user.id).maybeSingle();
+    if (again.error) throw again.error; p = again.data;
+  }
+  return p;
+}
+
+async function guard() {
+  const { data: s } = await db.auth.getSession();
+  if (!s.session) { location.replace(LOGIN_PAGE); return false; }
+  try { profile = await loadProfile(s.session.user); } catch (e) { await db.auth.signOut(); location.replace(LOGIN_PAGE); return false; }
+  if (!profile || String(profile.status || "").toLowerCase() === "banned") { await db.auth.signOut(); location.replace(LOGIN_PAGE); return false; }
+  document.body.style.visibility = "visible";
+  return true;
+}
+
+async function loadTickets() {
+  const box = document.getElementById("tickets"); box.textContent = "";
+  const r = await db.from("support_tickets").select("id, subject, status, updated_at").order("updated_at", { ascending: false }).limit(100);
+  if (r.error) { box.appendChild(el("div", "empty", "Tickets load nahi huin.")); return; }
+  if (!r.data.length) { box.appendChild(el("div", "empty", "Abhi koi ticket nahi.")); return; }
+  r.data.forEach(function (t) {
+    const row = el("div", "trow");
+    const left = el("div"); left.appendChild(el("b", "", t.subject));
+    const d = el("div", "muted", new Date(t.updated_at).toLocaleString()); d.style.marginTop = "6px"; left.appendChild(d);
+    row.appendChild(left);
+    row.appendChild(el("span", "st " + t.status, t.status === "answered" ? "Jawab aa gaya" : t.status === "closed" ? "Band" : "Open"));
+    row.addEventListener("click", function () { openThread(t); });
+    box.appendChild(row);
+  });
+}
+
+async function openThread(t) {
+  current = t; showMsg("", true);
+  document.getElementById("listView").style.display = "none";
+  document.getElementById("threadView").style.display = "block";
+  document.getElementById("tTitle").textContent = t.subject;
+  document.getElementById("replyBox").style.display = t.status === "closed" ? "none" : "block";
+  const th = document.getElementById("thread"); th.textContent = "";
+  const r = await db.from("ticket_messages").select("sender, message, created_at").eq("ticket_id", t.id).order("created_at", { ascending: true });
+  if (r.error) { th.appendChild(el("div", "empty", "Paigham load nahi hue.")); return; }
+  (r.data || []).forEach(function (m) {
+    const d = el("div", "m " + m.sender, m.message);
+    d.appendChild(el("small", "", (m.sender === "admin" ? "Support" : "Aap") + " · " + new Date(m.created_at).toLocaleString()));
+    th.appendChild(d);
+  });
+}
+
+document.getElementById("backBtn").addEventListener("click", function () {
+  document.getElementById("threadView").style.display = "none";
+  document.getElementById("listView").style.display = "block";
+  loadTickets();
+});
+
+document.getElementById("createBtn").addEventListener("click", async function () {
+  const subject = document.getElementById("subject").value.trim();
+  const message = document.getElementById("message").value.trim();
+  if (!subject || !message) { showMsg("Mauzu aur masla dono likhein.", false); return; }
+  const btn = this; btn.disabled = true;
+  const { error } = await db.rpc("create_ticket", { p_subject: subject, p_message: message });
+  btn.disabled = false;
+  if (error) { showMsg(error.message, false); return; }
+  document.getElementById("subject").value = ""; document.getElementById("message").value = "";
+  showMsg("Aap ka masla bhej diya gaya hai. Jald jawab diya jayega.", true);
+  loadTickets();
+});
+
+document.getElementById("replyBtn").addEventListener("click", async function () {
+  const text = document.getElementById("replyText").value.trim();
+  if (!text) { showMsg("Pehle jawab likhein.", false); return; }
+  const btn = this; btn.disabled = true;
+  const { error } = await db.rpc("add_ticket_message", { p_ticket: current.id, p_message: text });
+  btn.disabled = false;
+  if (error) { showMsg(error.message, false); return; }
+  document.getElementById("replyText").value = "";
+  showMsg("Aap ka paigham bhej diya gaya.", true);
+  current.status = "open";
+  openThread(current);
+});
+
+guard().then(function (ok) { if (ok) loadTickets(); });
+</script>
+</body>
+</html>

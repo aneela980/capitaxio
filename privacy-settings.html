@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<style>textarea{min-height:360px!important}</style>
+<script>
+window.PAGE = {
+ "table": "site_settings",
+ "mode": "single",
+ "idKey": "id",
+ "idValue": 1,
+ "description": "Privacy Policy ka poora matn. Users ko legal.html?type=privacy par nazar aata hai. KYC aur personal data ke liye ye likhna zaroori hai.",
+ "form": [
+  {
+   "key": "privacy_policy",
+   "label": "Privacy Policy",
+   "type": "textarea",
+   "maxlength": 20000,
+   "help": "Likhein ke kya data liya jata hai, kyun, kitne arse rakha jata hai, aur kaun dekh sakta hai."
+  }
+ ],
+ "title": "Privacy Policy"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

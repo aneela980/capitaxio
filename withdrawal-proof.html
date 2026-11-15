@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio - Withdrawal Proof</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f4f6fb;color:#253149}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:245px;flex-shrink:0;background:#172238;color:white;padding:23px 15px}
+.brand{font-size:25px;font-weight:bold;color:#54dfb1;margin-bottom:8px}
+.sub{font-size:11px;color:#aebbd0;margin-bottom:25px}
+.sidebar a{display:block;padding:12px;border-radius:7px;text-decoration:none;color:#dce4f0;font-size:14px;margin:4px 0}
+.sidebar a:hover,.sidebar a.active{background:#293951;color:#54dfb1}
+main{flex:1;min-width:0;padding:28px}
+.header{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:24px}
+h1{font-size:27px;margin-bottom:7px}
+.muted{color:#7b879b;font-size:13px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-bottom:20px}
+.card,.panel{background:white;padding:20px;border-radius:12px;box-shadow:0 3px 15px #1722380a}
+.card p{font-size:13px;color:#7b879b;margin-bottom:12px}
+.card h2{font-size:24px}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+input,select{padding:11px;border:1px solid #dce2ec;border-radius:7px;max-width:100%;background:white}
+button{border:0;border-radius:7px;padding:10px 12px;cursor:pointer;font-weight:bold}
+.primary{background:#54dfb1;color:#172238}
+.neutral{background:#e9edf5;color:#34415a}
+.danger{background:#ffe2e2;color:#ad2929}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:850px}
+th,td{text-align:left;padding:13px 11px;border-bottom:1px solid #edf0f5;font-size:13px}
+th{background:#f8f9fc;color:#69758b}
+.status{display:inline-block;padding:6px 9px;border-radius:20px;font-size:11px;font-weight:bold}
+.Pending{background:#fff0cc;color:#926300}
+.Verified{background:#d8f8e9;color:#16784e}
+.Rejected{background:#ffe0e0;color:#ad2929}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.empty{text-align:center;padding:25px;color:#7b879b}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:18px}
+.field label{display:block;font-size:13px;margin-bottom:7px;font-weight:bold}
+.field input,.field select{width:100%}
+.form-actions{display:flex;gap:10px;margin-top:16px}
+@media(max-width:800px){
+.layout{display:block}.sidebar{width:100%}
+.sidebar nav{display:flex;overflow-x:auto;gap:5px}
+.sidebar a{white-space:nowrap}
+main{padding:16px}.cards{grid-template-columns:1fr}
+.form-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+<div class="brand">Capitaxio</div>
+<div class="sub">ADMINISTRATION PANEL</div>
+<nav>
+<a href="admin.html">Dashboard</a>
+<a href="manage-users.html">Manage Users</a>
+<a href="deposits.html">Deposits</a>
+<a href="withdrawals.html">Withdrawals</a>
+<a href="pending-withdrawals.html">Pending Withdrawals</a>
+<a href="approved-withdrawals.html">Approved Withdrawals</a>
+<a href="rejected-withdrawals.html">Rejected Withdrawals</a>
+<a href="all-withdrawals.html">All Withdrawals</a>
+<a href="withdrawal-proof.html" class="active">Withdrawal Proof</a>
+<a href="withdrawal-methods.html">Withdrawal Methods</a>
+<a href="reports-analytics.html">Reports & Analytics</a>
+<a href="system-configuration.html">System Configuration</a>
+<a href="admin-login.html">Logout</a>
+</nav>
+</aside>
+
+<main>
+<div class="header">
+<div>
+<h1>Withdrawal Proof</h1>
+<p class="muted">Manage withdrawal receipts and transaction proof records.</p>
+</div>
+<button class="primary" onclick="showForm()">+ Add Proof</button>
+</div>
+
+<section class="cards">
+<div class="card"><p>Total Proof Records</p><h2 id="total">0</h2></div>
+<div class="card"><p>Pending Verification</p><h2 id="pending">0</h2></div>
+<div class="card"><p>Verified Proofs</p><h2 id="verified">0</h2></div>
+</section>
+
+<section class="panel" id="formPanel" style="display:none">
+<h3>Add Withdrawal Proof</h3>
+<form id="proofForm">
+<div class="form-grid">
+<div class="field">
+<label for="user">User Name</label>
+<input id="user" required placeholder="Enter user name">
+</div>
+<div class="field">
+<label for="requestId">Withdrawal Request ID</label>
+<input id="requestId" required placeholder="e.g. WD-1001">
+</div>
+<div class="field">
+<label for="amount">Withdrawal Amount (Rs.)</label>
+<input id="amount" type="number" min="1" required placeholder="Enter amount">
+</div>
+<div class="field">
+<label for="transaction">Transaction ID</label>
+<input id="transaction" required placeholder="Enter transaction ID">
+</div>
+<div class="field">
+<label for="proofLink">Proof Image URL (optional)</label>
+<input id="proofLink" type="url" placeholder="https://example.com/proof.jpg">
+</div>
+<div class="field">
+<label for="date">Transaction Date</label>
+<input id="date" type="date" required>
+</div>
+</div>
+<div class="form-actions">
+<button class="primary" type="submit">Save Proof</button>
+<button class="neutral" type="button" onclick="hideForm()">Cancel</button>
+</div>
+</form>
+</section>
+
+<section class="panel">
+<h3>Proof Records</h3>
+<div class="tools">
+<input id="search" placeholder="Search user, request or transaction ID" oninput="render()">
+<select id="filter" onchange="render()">
+<option value="All">All Statuses</option>
+<option value="Pending">Pending</option>
+<option value="Verified">Verified</option>
+<option value="Rejected">Rejected</option>
+</select>
+<button class="neutral" onclick="exportCSV()">Export CSV</button>
+</div>
+<div class="table-wrap">
+<table>
+<thead><tr>
+<th>User</th><th>Request ID</th><th>Amount</th><th>Transaction ID</th><th>Date</th><th>Proof</th><th>Status</th><th>Actions</th>
+</tr></thead>
+<tbody id="rows"></tbody>
+</table>
+</div>
+<p class="muted" style="margin-top:14px">Demo records are saved in this browser only.</p>
+</section>
+</main>
+</div>
+
+<script>
+const KEY="capitaxio_withdrawal_proofs_v1";
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return []}}
+let proofs=load();
+
+function esc(v){
+return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function money(v){return "Rs. "+Number(v||0).toLocaleString("en-PK")}
+function save(){localStorage.setItem(KEY,JSON.stringify(proofs));render()}
+function showForm(){document.getElementById("formPanel").style.display="block";document.getElementById("formPanel").scrollIntoView({behavior:"smooth"})}
+function hideForm(){document.getElementById("formPanel").style.display="none"}
+
+document.getElementById("date").value=new Date().toISOString().slice(0,10);
+
+document.getElementById("proofForm").addEventListener("submit",function(e){
+e.preventDefault();
+const proofLink=document.getElementById("proofLink").value.trim();
+if(proofLink){
+try{
+const u=new URL(proofLink);
+if(u.protocol!=="https:"&&u.protocol!=="http:")throw new Error();
+}catch(e){alert("Please enter a valid HTTP/HTTPS proof URL.");return}
+}
+proofs.unshift({
+id:"PRF-"+Date.now(),
+user:document.getElementById("user").value.trim(),
+requestId:document.getElementById("requestId").value.trim(),
+amount:Number(document.getElementById("amount").value),
+transaction:document.getElementById("transaction").value.trim(),
+proofLink,
+date:document.getElementById("date").value,
+status:"Pending"
+});
+save();
+this.reset();
+document.getElementById("date").value=new Date().toISOString().slice(0,10);
+hideForm();
+});
+
+function render(){
+const q=document.getElementById("search").value.toLowerCase();
+const filter=document.getElementById("filter").value;
+document.getElementById("total").textContent=proofs.length;
+document.getElementById("pending").textContent=proofs.filter(p=>p.status==="Pending").length;
+document.getElementById("verified").textContent=proofs.filter(p=>p.status==="Verified").length;
+
+const list=proofs.filter(p=>
+[p.user,p.requestId,p.transaction].join(" ").toLowerCase().includes(q)&&
+(filter==="All"||p.status===filter)
+);
+
+document.getElementById("rows").innerHTML=list.length?list.map(p=>`
+<tr>
+<td>${esc(p.user)}</td>
+<td>${esc(p.requestId)}</td>
+<td>${money(p.amount)}</td>
+<td>${esc(p.transaction)}</td>
+<td>${esc(p.date)}</td>
+<td>${p.proofLink?`<a href="${esc(p.proofLink)}" target="_blank" rel="noopener noreferrer">View Proof</a>`:"Not provided"}</td>
+<td><span class="status ${esc(p.status)}">${esc(p.status)}</span></td>
+<td><div class="actions">
+${p.status==="Pending"?`
+<button class="primary" onclick="changeStatus('${esc(p.id)}','Verified')">Verify</button>
+<button class="danger" onclick="changeStatus('${esc(p.id)}','Rejected')">Reject</button>`:""}
+<button class="neutral" onclick="removeProof('${esc(p.id)}')">Delete</button>
+</div></td>
+</tr>`).join(""):`<tr><td colspan="8" class="empty">No withdrawal proof records found.</td></tr>`;
+}
+
+function changeStatus(id,status){
+if(!confirm("Proof status "+status+" karna hai?"))return;
+proofs=proofs.map(p=>p.id===id?{...p,status}:p);
+save();
+}
+
+function removeProof(id){
+if(!confirm("Is demo proof record ko delete karna hai?"))return;
+proofs=proofs.filter(p=>p.id!==id);save();
+}
+
+function exportCSV(){
+const data=[["User","Request ID","Amount","Transaction ID","Date","Proof URL","Status"],
+...proofs.map(p=>[p.user,p.requestId,p.amount,p.transaction,p.date,p.proofLink,p.status])];
+const csv=data.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\n");
+const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
+const url=URL.createObjectURL(blob);
+const a=document.createElement("a");a.href=url;a.download="capitaxio-withdrawal-proof.csv";a.click();
+URL.revokeObjectURL(url);
+}
+render();
+</script>
+</body>
+</html>

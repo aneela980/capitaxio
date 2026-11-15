@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capitaxio - Manage Templates</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f5f6fc;
+      color: #20243a;
+    }
+
+    .sidebar {
+      width: 250px;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background: #171a35;
+      color: #fff;
+      padding: 25px 16px;
+      overflow-y: auto;
+    }
+
+    .brand {
+      font-size: 25px;
+      font-weight: 800;
+      margin: 0 0 8px 10px;
+    }
+
+    .admin-label {
+      color: #a5a9c7;
+      font-size: 11px;
+      letter-spacing: 2px;
+      margin: 0 0 28px 10px;
+    }
+
+    .nav-title {
+      color: #858baa;
+      font-size: 11px;
+      text-transform: uppercase;
+      margin: 22px 10px 10px;
+      letter-spacing: 1px;
+    }
+
+    .nav-link {
+      display: block;
+      color: #c8cbe0;
+      text-decoration: none;
+      padding: 12px 13px;
+      border-radius: 8px;
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      background: #6958e8;
+      color: #fff;
+    }
+
+    .main {
+      margin-left: 250px;
+      padding: 28px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .topbar h1 {
+      font-size: 25px;
+      font-weight: 800;
+    }
+
+    .topbar p {
+      color: #858aa1;
+      font-size: 13px;
+      margin-top: 7px;
+      line-height: 1.6;
+    }
+
+    .admin-badge {
+      background: #fff;
+      border: 1px solid #e8e9f2;
+      padding: 11px 15px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .notice {
+      background: #fff6df;
+      border: 1px solid #f5df9e;
+      color: #815c08;
+      padding: 15px 18px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.7;
+      margin-bottom: 22px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .stat-card,
+    .card {
+      background: #fff;
+      border: 1px solid #e9eaf3;
+      border-radius: 15px;
+      padding: 22px;
+      box-shadow: 0 5px 18px rgba(35, 35, 80, 0.035);
+    }
+
+    .stat-card p {
+      color: #858aa1;
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+
+    .stat-card h2 {
+      font-size: 24px;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .toolbar input,
+    .toolbar select {
+      padding: 12px;
+      border: 1px solid #e2e4ef;
+      border-radius: 8px;
+      background: #fff;
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .toolbar input {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .toolbar select:focus,
+    .toolbar input:focus {
+      border-color: #6958e8;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 11px 15px;
+      background: #6958e8;
+      color: white;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background: #5543d2;
+    }
+
+    .btn-light {
+      background: #f0efff;
+      color: #6958e8;
+    }
+
+    .btn-light:hover {
+      background: #e4e1ff;
+    }
+
+    .btn-danger {
+      background: #fff0f0;
+      color: #d64545;
+    }
+
+    .btn-danger:hover {
+      background: #ffe0e0;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 700px;
+    }
+
+    th {
+      text-align: left;
+      color: #858aa1;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      padding: 14px 12px;
+      border-bottom: 1px solid #eeeef5;
+    }
+
+    td {
+      padding: 16px 12px;
+      border-bottom: 1px solid #f0f0f6;
+      font-size: 12px;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .template-name {
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .template-description {
+      color: #858aa1;
+      font-size: 11px;
+      margin-top: 5px;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .status.active {
+      background: #e7f9ef;
+      color: #21834b;
+    }
+
+    .status.inactive {
+      background: #f0f0f5;
+      color: #72768c;
+    }
+
+    .actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 30px;
+      color: #858aa1;
+      font-size: 13px;
+      display: none;
+    }
+
+    .footer {
+      text-align: center;
+      color: #9599ad;
+      font-size: 11px;
+      padding: 25px 0 5px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      background: rgba(15, 17, 40, .55);
+      padding: 20px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: #fff;
+      border-radius: 15px;
+      padding: 25px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-content h2 {
+      font-size: 19px;
+      margin-bottom: 20px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e2e4ef;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .field textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: #6958e8;
+    }
+
+    .result {
+      display: none;
+      padding: 13px;
+      border-radius: 8px;
+      background: #eefaf2;
+      color: #227443;
+      font-size: 12px;
+      line-height: 1.7;
+      margin-top: 15px;
+    }
+
+    @media (max-width: 900px) {
+      .sidebar {
+        width: 210px;
+      }
+
+      .main {
+        margin-left: 210px;
+        padding: 20px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        max-height: 260px;
+      }
+
+      .main {
+        margin-left: 0;
+        padding: 16px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .topbar h1 {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <aside class="sidebar">
+    <div class="brand">Capitaxio</div>
+    <div class="admin-label">ADMIN PANEL</div>
+
+    <div class="nav-title">Main Menu</div>
+    <a class="nav-link" href="admin.html">Dashboard</a>
+    <a class="nav-link" href="general-settings.html">General Settings</a>
+    <a class="nav-link" href="manage-users.html">Manage Users</a>
+    <a class="nav-link" href="manage-admins.html">Manage Admins</a>
+
+    <div class="nav-title">System Settings</div>
+    <a class="nav-link" href="system-application.html">Application</a>
+    <a class="nav-link" href="system-server.html">Server</a>
+    <a class="nav-link" href="system-cache.html">Cache</a>
+    <a class="nav-link" href="system-configuration.html">Configuration</a>
+    <a class="nav-link" href="custom-css.html">Custom CSS</a>
+    <a class="nav-link active" href="manage-templates.html">Manage Templates</a>
+    <a class="nav-link" href="manage-pages.html">Manage Pages</a>
+    <a class="nav-link" href="privacy-policy.html">Privacy Policy</a>
+
+    <div class="nav-title">Account</div>
+    <a class="nav-link" href="admin-login.html">Admin Login</a>
+  </aside>
+
+  <main class="main">
+
+    <header class="topbar">
+      <div>
+        <h1>Manage Templates</h1>
+        <p>View, create, edit and manage website template records.</p>
+      </div>
+      <div class="admin-badge">Capitaxio Admin</div>
+    </header>
+
+    <div class="notice">
+      <strong>Demo Mode:</strong> Templates is page par browser ke andar demo records
+      manage hote hain. Is se live website ka design ya actual templates change nahi honge.
+    </div>
+
+    <section class="stats">
+      <div class="stat-card">
+        <p>Total Templates</p>
+        <h2 id="totalCount">0</h2>
+      </div>
+
+      <div class="stat-card">
+        <p>Active Templates</p>
+        <h2 id="activeCount">0</h2>
+      </div>
+
+      <div class="stat-card">
+        <p>Inactive Templates</p>
+        <h2 id="inactiveCount">0</h2>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="toolbar">
+        <input
+          type="search"
+          id="searchInput"
+          placeholder="Search templates..."
+          aria-label="Search templates"
+        >
+
+        <select id="statusFilter" aria-label="Filter by status">
+          <option value="all">All Statuses</option>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+
+        <button class="btn" type="button" onclick="openAddModal()">
+          + Add Template
+        </button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Template</th>
+              <th>Category</th>
+              <th>Updated</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody id="templateTable"></tbody>
+        </table>
+      </div>
+
+      <div class="empty" id="emptyMessage">
+        No templates found. Search change karo ya new template add karo.
+      </div>
+
+      <div class="result" id="pageResult" role="status"></div>
+    </section>
+
+    <footer class="footer">
+      © 2026 Capitaxio Admin Panel
+    </footer>
+
+  </main>
+
+  <div class="modal" id="templateModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-content">
+      <h2 id="modalTitle">Add Template</h2>
+
+      <form id="templateForm">
+        <input type="hidden" id="templateId">
+
+        <div class="field">
+          <label for="templateName">Template Name</label>
+          <input id="templateName" type="text" maxlength="80" required placeholder="Enter template name">
+        </div>
+
+        <div class="field">
+          <label for="templateCategory">Category</label>
+          <select id="templateCategory" required>
+            <option value="Website">Website</option>
+            <option value="Email">Email</option>
+            <option value="Dashboard">Dashboard</option>
+            <option value="Notification">Notification</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="templateDescription">Description</label>
+          <textarea id="templateDescription" maxlength="250" placeholder="Enter a short description"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="templateStatus">Status</label>
+          <select id="templateStatus">
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+
+        <div class="actions">
+          <button class="btn" type="submit">Save Template</button>
+          <button class="btn btn-light" type="button" onclick="closeModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const initialTemplates = [
+      {
+        id: 1,
+        name: "Default Website Template",
+        category: "Website",
+        description: "Default website template record.",
+        updated: "Demo record",
+        status: "Active"
+      },
+      {
+        id: 2,
+        name: "Welcome Email Template",
+        category: "Email",
+        description: "Example welcome email template record.",
+        updated: "Demo record",
+        status: "Active"
+      },
+      {
+        id: 3,
+        name: "Admin Dashboard Template",
+        category: "Dashboard",
+        description: "Example dashboard template record.",
+        updated: "Demo record",
+        status: "Inactive"
+      },
+      {
+        id: 4,
+        name: "System Notification Template",
+        category: "Notification",
+        description: "Example system notification template record.",
+        updated: "Demo record",
+        status: "Active"
+      }
+    ];
+
+    let templates = initialTemplates.map(item => ({ ...item }));
+    let nextId = 5;
+
+    const table = document.getElementById("templateTable");
+    const modal = document.getElementById("templateModal");
+    const form = document.getElementById("templateForm");
+
+    function escapeHTML(value) {
+      return String(value).replace(/[&<>"']/g, function(char) {
+        return {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;"
+        }[char];
+      });
+    }
+
+    function renderTemplates() {
+      const query = document.getElementById("searchInput").value
+        .trim()
+        .toLowerCase();
+
+      const status = document.getElementById("statusFilter").value;
+
+      const filtered = templates.filter(item => {
+        const searchable =
+          (item.name + " " + item.category + " " + item.description)
+            .toLowerCase();
+
+        const matchesSearch = searchable.includes(query);
+        const matchesStatus = status === "all" || item.status === status;
+
+        return matchesSearch && matchesStatus;
+      });
+
+      table.innerHTML = filtered.map(item => `
+        <tr>
+          <td>
+            <div class="template-name">${escapeHTML(item.name)}</div>
+            <div class="template-description">${escapeHTML(item.description || "No description")}</div>
+          </td>
+          <td>${escapeHTML(item.category)}</td>
+          <td>${escapeHTML(item.updated)}</td>
+          <td>
+            <span class="status ${item.status === "Active" ? "active" : "inactive"}">
+              ${escapeHTML(item.status)}
+            </span>
+          </td>
+          <td>
+            <div class="actions">
+              <button class="btn btn-light" type="button" onclick="editTemplate(${item.id})">Edit</button>
+              <button class="btn btn-light" type="button" onclick="toggleTemplate(${item.id})">
+                ${item.status === "Active" ? "Deactivate" : "Activate"}
+              </button>
+              <button class="btn btn-danger" type="button" onclick="deleteTemplate(${item.id})">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join("");
+
+      document.getElementById("emptyMessage").style.display =
+        filtered.length ? "none" : "block";
+
+      document.getElementById("totalCount").textContent = templates.length;
+      document.getElementById("activeCount").textContent =
+        templates.filter(item => item.status === "Active").length;
+      document.getElementById("inactiveCount").textContent =
+        templates.filter(item => item.status === "Inactive").length;
+    }
+
+    function showMessage(message) {
+      const result = document.getElementById("pageResult");
+      result.style.display = "block";
+      result.textContent = message;
+    }
+
+    function openAddModal() {
+      form.reset();
+      document.getElementById("templateId").value = "";
+      document.getElementById("modalTitle").textContent = "Add Template";
+      modal.style.display = "flex";
+      document.getElementById("templateName").focus();
+    }
+
+    function closeModal() {
+      modal.style.display = "none";
+    }
+
+    function editTemplate(id) {
+      const item = templates.find(template => template.id === id);
+      if (!item) return;
+
+      document.getElementById("templateId").value = item.id;
+      document.getElementById("templateName").value = item.name;
+      document.getElementById("templateCategory").value = item.category;
+      document.getElementById("templateDescription").value = item.description;
+      document.getElementById("templateStatus").value = item.status;
+      document.getElementById("modalTitle").textContent = "Edit Template";
+
+      modal.style.display = "flex";
+      document.getElementById("templateName").focus();
+    }
+
+    form.addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      const idValue = document.getElementById("templateId").value;
+      const name = document.getElementById("templateName").value.trim();
+      const category = document.getElementById("templateCategory").value;
+      const description = document.getElementById("templateDescription").value.trim();
+      const status = document.getElementById("templateStatus").value;
+
+      if (!name) {
+        document.getElementById("templateName").focus();
+        return;
+      }
+
+      if (idValue) {
+        const item = templates.find(template => template.id === Number(idValue));
+
+        if (item) {
+          item.name = name;
+          item.category = category;
+          item.description = description;
+          item.status = status;
+          item.updated = "Just now";
+        }
+
+        showMessage("Template updated in this demo session.");
+      } else {
+        templates.unshift({
+          id: nextId++,
+          name,
+          category,
+          description,
+          updated: "Just now",
+          status
+        });
+
+        showMessage("Template added to this demo session.");
+      }
+
+      closeModal();
+      renderTemplates();
+    });
+
+    function toggleTemplate(id) {
+      const item = templates.find(template => template.id === id);
+      if (!item) return;
+
+      item.status = item.status === "Active" ? "Inactive" : "Active";
+      item.updated = "Just now";
+
+      renderTemplates();
+      showMessage("Template status updated in this demo session.");
+    }
+
+    function deleteTemplate(id) {
+      const item = templates.find(template => template.id === id);
+      if (!item) return;
+
+      if (!confirm("Delete this demo template record?")) return;
+
+      templates = templates.filter(template => template.id !== id);
+      renderTemplates();
+      showMessage("Demo template record deleted.");
+    }
+
+    document.getElementById("searchInput").addEventListener("input", renderTemplates);
+    document.getElementById("statusFilter").addEventListener("change", renderTemplates);
+
+    modal.addEventListener("click", function(event) {
+      if (event.target === modal) closeModal();
+    });
+
+    document.addEventListener("keydown", function(event) {
+      if (event.key === "Escape") closeModal();
+    });
+
+    renderTemplates();
+  </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const supabaseUrl = 'https://zwffgoenruzcctkyptjg.supabase.co'
+  const supabaseKey = 'sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar'
+  const db = window.supabase.createClient(supabaseUrl, supabaseKey)
+
+  // test
+  async function test() {
+    const { data, error } = await db.from('users').select('*')
+    console.log(data, error)
+  }
+  test()
+</script>
+</body>
+</html>

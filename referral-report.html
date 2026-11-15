@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Referral Team Report | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "description": "Kis ne kis ko refer kiya, status aur reward ke saath.",
+ "table": "referral_report",
+ "orderBy": "created_at",
+ "columns": [
+  {
+   "key": "referrer_name",
+   "label": "Referrer",
+   "type": "text"
+  },
+  {
+   "key": "referrer_email",
+   "label": "Referrer Email",
+   "type": "text"
+  },
+  {
+   "key": "referred_name",
+   "label": "Referred User",
+   "type": "text"
+  },
+  {
+   "key": "referred_email",
+   "label": "Referred Email",
+   "type": "text"
+  },
+  {
+   "key": "status",
+   "label": "Status",
+   "type": "badge"
+  },
+  {
+   "key": "reward",
+   "label": "Reward",
+   "type": "money"
+  },
+  {
+   "key": "created_at",
+   "label": "Date",
+   "type": "date"
+  }
+ ],
+ "searchKeys": [
+  "referrer_name",
+  "referrer_email",
+  "referred_name",
+  "referred_email"
+ ],
+ "title": "Referral Team Report"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

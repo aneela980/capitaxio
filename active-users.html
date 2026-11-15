@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio - Active Users</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f3f6fc;color:#202b45}
+.sidebar{position:fixed;top:0;left:0;width:235px;height:100vh;background:#17233f;padding:24px 14px;overflow:auto}
+.brand{font-size:25px;font-weight:bold;color:#55dfb0;margin:0 10px 25px}
+.sidebar a{display:block;color:#d5deef;text-decoration:none;padding:12px 14px;border-radius:8px;margin:4px 0;font-size:14px}
+.sidebar a:hover,.sidebar a.active{background:#2c3c60;color:#55dfb0}
+.main{margin-left:235px;padding:28px}
+.header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:24px}
+.header h1{font-size:25px}
+.admin,.card,.panel{background:white;border-radius:12px;padding:20px;box-shadow:0 4px 18px #17233f0b}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-bottom:22px}
+.card p{font-size:13px;color:#7c879b;margin-bottom:12px}
+.card h2{font-size:26px}
+.panel{margin-bottom:20px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.controls{display:flex;gap:10px;flex-wrap:wrap}
+input,select{padding:11px 12px;border:1px solid #dce3ef;border-radius:8px;background:white;max-width:100%}
+button{border:0;padding:11px 14px;border-radius:8px;background:#16a982;color:white;font-weight:bold;cursor:pointer}
+button:hover{opacity:.88}
+button:disabled{opacity:.55;cursor:not-allowed}
+.blue{background:#315dc1}
+.red{background:#ffe9e9;color:#bd3544}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:700px}
+th,td{text-align:left;padding:14px 12px;border-bottom:1px solid #edf0f6;font-size:13px}
+th{background:#f7f9fc;color:#758198}
+.pill{padding:6px 10px;border-radius:20px;background:#e4f8ef;color:#13885e;font-size:12px}
+.empty{text-align:center;color:#8994a7;padding:25px}
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.formgrid input,.formgrid select{width:100%}
+.note{font-size:12px;color:#7c879b;line-height:1.6;margin-top:15px}
+.message{font-size:13px;margin-bottom:15px;line-height:1.6;overflow-wrap:anywhere}
+.success{color:#13885e}
+.error{color:#bd3544}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+@media(max-width:850px){.sidebar{width:190px}.main{margin-left:190px;padding:18px}.stats{grid-template-columns:1fr}}
+@media(max-width:560px){.sidebar{position:static;width:100%;height:auto}.brand{margin-bottom:10px}.sidebar a{display:inline-block;padding:9px}.main{margin:0;padding:14px}.stats,.formgrid{grid-template-columns:1fr}.header h1{font-size:21px}}
+</style>
+</head>
+
+<body>
+<aside class="sidebar">
+<div class="brand">Capitaxio</div>
+<a href="admin.html">Dashboard</a>
+<a href="manage-users.html">Manage Users</a>
+<a class="active" href="active-users.html">Active Users</a>
+<a href="banned-users.html">Banned Users</a>
+<a href="user-verification.html">User Verification</a>
+<a href="login-history.html">Login History</a>
+<a href="reports-analytics.html">Report Analytics</a>
+<a href="admin-login.html" id="logout">Logout</a>
+</aside>
+
+<main class="main">
+<div class="header">
+<h1>Active Users</h1>
+<div class="admin">👤 Admin Panel</div>
+</div>
+
+<p id="message" class="message" role="status" aria-live="polite"></p>
+
+<section class="stats">
+<div class="card"><p>Total User Records</p><h2 id="total">0</h2></div>
+<div class="card"><p>Active Accounts</p><h2 id="active">0</h2></div>
+<div class="card"><p>Inactive Accounts</p><h2 id="inactive">0</h2></div>
+</section>
+
+<section class="panel">
+<h3 style="margin-bottom:18px">Add User Record</h3>
+<form id="addForm" class="formgrid">
+<input id="name" placeholder="User full name" required maxlength="150">
+<input id="email" type="email" placeholder="User email" maxlength="254">
+<input id="mobile" type="tel" placeholder="Mobile number" maxlength="30">
+<select id="status">
+<option value="active">Active</option>
+<option value="inactive">Inactive</option>
+</select>
+<button id="addButton" type="submit">Add User</button>
+<button class="blue" type="button" id="exportButton">Export CSV</button>
+</form>
+<p class="note">Records are saved in Supabase. Adding a record here does not create a Supabase Auth account. Database permissions and RLS policies must allow the operation.</p>
+</section>
+
+<section class="panel">
+<div class="toolbar">
+<h3>User List</h3>
+<div class="controls">
+<input id="search" placeholder="Search name, email or mobile..." aria-label="Search users">
+<select id="filter" aria-label="Filter users">
+<option value="all">All statuses</option>
+<option value="active">Active</option>
+<option value="inactive">Inactive</option>
+</select>
+<button class="blue" type="button" id="refreshButton">Refresh</button>
+</div>
+</div>
+<div class="tablewrap">
+<table>
+<thead>
+<tr><th>Name</th><th>Email</th><th>Mobile</th><th>Status</th><th>Actions</th></tr>
+</thead>
+<tbody id="rows">
+<tr><td colspan="5" class="empty">Loading users...</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+</main>
+
+<script>
+const SUPABASE_URL = "https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+
+const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let users = [];
+let loading = false;
+
+const $ = id => document.getElementById(id);
+
+function showMessage(text, type="") {
+  $("message").textContent = text;
+  $("message").className = "message " + type;
+}
+
+function safe(value) {
+  return String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[c]);
+}
+
+function getName(u) {
+  return u.full_name ?? u.name ?? u.username ?? u.first_name ?? u.email ?? "Unnamed user";
+}
+function getEmail(u) {
+  return u.email ?? "";
+}
+function getMobile(u) {
+  return u.mobile ?? u.phone ?? u.phone_number ?? "";
+}
+function getStatus(u) {
+  const s = String(u.status ?? u.account_status ?? "active").toLowerCase().trim();
+  if (["inactive","disabled","deactivated"].includes(s)) return "inactive";
+  if (["banned","blocked","suspended"].includes(s)) return "banned";
+  return s;
+}
+function getJoinedDate(u) {
+  const d = u.created_at ?? u.joined_at ?? "";
+  if (!d) return "";
+  const date = new Date(d);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString();
+}
+
+async function loadUsers() {
+  if (loading) return;
+  loading = true;
+  $("refreshButton").disabled = true;
+  $("addButton").disabled = true;
+  showMessage("Loading users from Supabase...", "loading");
+
+  try {
+    const {data, error} = await client
+      .from("users")
+      .select("*")
+      .order("created_at", {ascending:false});
+
+    if (error) throw error;
+    users = Array.isArray(data) ? data : [];
+    render();
+    showMessage("User records loaded from Supabase.", "success");
+  } catch (error) {
+    users = [];
+    render();
+    showMessage("Could not load users: " + error.message +
+      ". Check table columns, connection and RLS policies.", "error");
+  } finally {
+    loading = false;
+    $("refreshButton").disabled = false;
+    $("addButton").disabled = false;
+  }
+}
+
+async function addUser(event) {
+  event.preventDefault();
+
+  const name = $("name").value.trim();
+  const email = $("email").value.trim();
+  const mobile = $("mobile").value.trim();
+  const status = $("status").value;
+
+  if (!name) {
+    showMessage("Please enter the user's name.", "error");
+    return;
+  }
+
+  /*
+    Assumes users table columns: full_name, email, mobile, status.
+    Change full_name to name if that is your actual column.
+  */
+  $("addButton").disabled = true;
+  showMessage("Saving user record...", "loading");
+
+  try {
+    const {error} = await client.from("users").insert({
+      full_name: name,
+      email: email || null,
+      mobile: mobile || null,
+      status
+    });
+
+    if (error) throw error;
+
+    $("addForm").reset();
+    await loadUsers();
+    showMessage("User record saved in Supabase.", "success");
+  } catch (error) {
+    showMessage("Could not add user: " + error.message +
+      ". Check column names and insert permissions.", "error");
+  } finally {
+    $("addButton").disabled = false;
+  }
+}
+
+async function toggleStatus(id) {
+  const user = users.find(u => String(u.id) === String(id));
+  if (!user) return;
+
+  const next = getStatus(user) === "active" ? "inactive" : "active";
+
+  if (!confirm("Change this user's status to " + next + "?")) return;
+
+  showMessage("Updating user status...", "loading");
+
+  try {
+    const {data, error} = await client
+      .from("users")
+      .update({status:next})
+      .eq("id", user.id)
+      .select("id");
+
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      throw new Error("No row updated. Check the ID and update RLS policy.");
+    }
+
+    await loadUsers();
+    showMessage("User status updated in Supabase.", "success");
+  } catch (error) {
+    showMessage("Could not update status: " + error.message, "error");
+  }
+}
+
+async function deleteUser(id) {
+  if (!confirm("Permanently delete this user record from Supabase?")) return;
+
+  showMessage("Deleting user record...", "loading");
+
+  try {
+    const {data, error} = await client
+      .from("users")
+      .delete()
+      .eq("id", id)
+      .select("id");
+
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      throw new Error("No row deleted. Check the ID and delete RLS policy.");
+    }
+
+    await loadUsers();
+    showMessage("User record deleted from Supabase.", "success");
+  } catch (error) {
+    showMessage("Could not delete user: " + error.message, "error");
+  }
+}
+
+function render() {
+  const q = $("search").value.toLowerCase().trim();
+  const filter = $("filter").value;
+
+  $("total").textContent = users.length;
+  $("active").textContent = users.filter(u => getStatus(u) === "active").length;
+  $("inactive").textContent = users.filter(u => getStatus(u) === "inactive").length;
+
+  const filtered = users.filter(u => {
+    const text = [getName(u),getEmail(u),getMobile(u)].join(" ").toLowerCase();
+    const status = getStatus(u);
+    return text.includes(q) && (filter === "all" || status === filter);
+  });
+
+  if (!filtered.length) {
+    $("rows").innerHTML = '<tr><td colspan="5" class="empty">No user records found.</td></tr>';
+    return;
+  }
+
+  $("rows").innerHTML = filtered.map(u => {
+    const status = getStatus(u);
+    const style = status === "active" ? "" : "background:#fff0dd;color:#a76b14";
+
+    return `
+      <tr>
+        <td><strong>${safe(getName(u))}</strong>
+          <div style="font-size:11px;color:#8994a7;margin-top:5px">${safe(getJoinedDate(u))}</div>
+        </td>
+        <td>${safe(getEmail(u) || "—")}</td>
+        <td>${safe(getMobile(u) || "—")}</td>
+        <td><span class="pill" style="${style}">${safe(status)}</span></td>
+        <td>
+          <div class="actions">
+            <button data-action="toggle" data-id="${safe(u.id)}">${status === "active" ? "Deactivate" : "Activate"}</button>
+            <button class="red" data-action="delete" data-id="${safe(u.id)}">Delete</button>
+          </div>
+        </td>
+      </tr>`;
+  }).join("");
+}
+
+function exportCSV() {
+  if (!users.length) {
+    showMessage("No database records available to export.", "error");
+    return;
+  }
+
+  const quote = v => '"' + String(v ?? "").replace(/"/g,'""') + '"';
+  const csv = [
+    ["Name","Email","Mobile","Status","Joined"].map(quote).join(","),
+    ...users.map(u => [
+      getName(u),getEmail(u),getMobile(u),getStatus(u),getJoinedDate(u)
+    ].map(quote).join(","))
+  ].join("\r\n");
+
+  const blob = new Blob(["\uFEFF" + csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "capitaxio-active-users.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function logout() {
+  try {
+    await client.auth.signOut();
+  } catch (error) {
+    console.error("Logout error:", error.message);
+  }
+}
+
+$("addForm").addEventListener("submit", addUser);
+$("search").addEventListener("input", render);
+$("filter").addEventListener("change", render);
+$("refreshButton").addEventListener("click", loadUsers);
+$("exportButton").addEventListener("click", exportCSV);
+
+$("rows").addEventListener("click", event => {
+  const button = event.target.closest("button[data-action]");
+  if (!button) return;
+
+  if (button.dataset.action === "toggle") toggleStatus(button.dataset.id);
+  if (button.dataset.action === "delete") deleteUser(button.dataset.id);
+});
+
+$("logout").addEventListener("click", logout);
+
+loadUsers();
+</script>
+</body>
+</html>

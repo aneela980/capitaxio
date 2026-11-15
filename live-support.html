@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Support | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "table": "site_settings",
+ "mode": "single",
+ "idKey": "id",
+ "idValue": 1,
+ "title": "Live Support",
+ "description": "Users ko dashboard par WhatsApp support ke links yahan se milte hain.",
+ "form": [
+  {
+   "key": "support_whatsapp_payment",
+   "label": "WhatsApp Payment Support",
+   "type": "text",
+   "maxlength": 120,
+   "help": "Number country code ke saath, jaise 923001234567 (+ ya space nahi), ya WhatsApp group ka link."
+  },
+  {
+   "key": "support_whatsapp_group",
+   "label": "WhatsApp Group",
+   "type": "text",
+   "maxlength": 200,
+   "help": "Group ka link, jaise https://chat.whatsapp.com/..."
+  },
+  {
+   "key": "support_whatsapp_general",
+   "label": "WhatsApp General Support",
+   "type": "text",
+   "maxlength": 120
+  }
+ ]
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

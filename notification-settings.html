@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notification Settings | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "table": "site_settings",
+ "mode": "single",
+ "idKey": "id",
+ "idValue": 1,
+ "description": "Notification ki settings. Push abhi sirf setting ke taur par save hoti hai, bhejne ka system alag se jorna hoga.",
+ "form": [
+  {
+   "key": "email_notifications",
+   "label": "Email notifications on",
+   "type": "checkbox"
+  },
+  {
+   "key": "push_enabled",
+   "label": "Push notifications on",
+   "type": "checkbox"
+  }
+ ],
+ "title": "Notification Settings"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>

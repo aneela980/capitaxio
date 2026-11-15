@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio - Website Status</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f4f5fb;color:#20243a}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:250px;background:#17172e;color:#fff;padding:25px 16px;flex-shrink:0}
+.brand{font-size:25px;font-weight:bold;padding:5px 12px 28px;color:#fff}
+.brand span{color:#a78bfa}
+.menu-title{font-size:11px;color:#9696b5;margin:20px 12px 10px}
+.sidebar a{display:block;text-decoration:none;color:#c7c7dc;padding:12px;border-radius:8px;margin:4px 0;font-size:14px}
+.sidebar a:hover,.sidebar a.active{background:#343052;color:white}
+.main{flex:1;min-width:0}
+.topbar{height:75px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 30px;border-bottom:1px solid #e8e8f1}
+.topbar h2{font-size:20px}
+.admin{font-size:13px;color:#666}
+.content{padding:30px;max-width:1200px;margin:auto}
+.heading{margin-bottom:25px}
+.heading h1{font-size:27px;margin-bottom:8px}
+.heading p{color:#777;font-size:14px;line-height:1.6}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:25px}
+.card,.panel{background:white;border:1px solid #e8e8f2;border-radius:13px;padding:22px}
+.card small{color:#777;font-size:13px}
+.card h2{font-size:23px;margin:13px 0 8px}
+.muted{font-size:12px;color:#888}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#16a36a;margin-right:7px}
+.dot.yellow{background:#e8a323}
+.panel{margin-bottom:22px}
+.panel h3{font-size:17px;margin-bottom:7px}
+.panel .desc{font-size:13px;color:#777;line-height:1.6;margin-bottom:20px}
+.setting{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:17px 0;border-bottom:1px solid #eee}
+.setting:last-child{border-bottom:0}
+.setting strong{font-size:14px;display:block;margin-bottom:6px}
+.setting p{font-size:12px;color:#777;line-height:1.5}
+.switch{position:relative;width:46px;height:25px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:#c9c9d6;border-radius:30px;cursor:pointer;transition:.2s}
+.slider:before{content:"";position:absolute;width:19px;height:19px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s}
+.switch input:checked+.slider{background:#7654e8}
+.switch input:checked+.slider:before{transform:translateX(21px)}
+label.field-label{display:block;font-size:13px;font-weight:bold;margin:17px 0 8px}
+input[type=text],textarea,select{width:100%;padding:12px;border:1px solid #dddde9;border-radius:8px;font:14px Arial;background:#fff;color:#222}
+textarea{resize:vertical;min-height:100px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+button{border:0;border-radius:8px;padding:12px 17px;font-weight:bold;cursor:pointer;font-size:13px}
+button:disabled{opacity:.6;cursor:not-allowed}
+.primary{background:#7654e8;color:#fff}
+.secondary{background:#efedf9;color:#51418c}
+.notice{display:none;padding:13px;border-radius:8px;background:#e8f8ef;color:#17653a;margin-top:15px;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.notice.error{background:#fff0f0;color:#a32222}
+.footer{text-align:center;color:#999;font-size:12px;padding:10px 0 25px}
+.menu-btn{display:none;background:#efedf9;color:#51418c}
+#preview{display:none;background:#f2efff;border:1px solid #ddd3ff;border-radius:9px;padding:16px;margin-top:18px}
+@media(max-width:900px){.sidebar{width:215px}.cards{grid-template-columns:1fr 1fr}.content{padding:22px}}
+@media(max-width:650px){
+.layout{display:block}
+.sidebar{display:none;width:100%}
+.sidebar.open{display:block}
+.topbar{padding:0 16px;height:65px}
+.topbar h2{font-size:17px}
+.menu-btn{display:block;padding:9px 12px}
+.admin{display:none}
+.content{padding:18px 14px}
+.heading h1{font-size:23px}
+.cards{grid-template-columns:1fr}
+.card,.panel{padding:18px}
+}
+</style>
+</head>
+
+<body>
+<div class="layout">
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">Capita<span>xio</span></div>
+
+  <div class="menu-title">MAIN MENU</div>
+  <a href="admin.html">Dashboard</a>
+  <a href="manage-users.html">Manage Users</a>
+  <a href="deposits.html">Deposits</a>
+  <a href="withdrawals.html">Withdrawals</a>
+  <a href="payment-gateways.html">Payment Gateways</a>
+
+  <div class="menu-title">SYSTEM MANAGEMENT</div>
+  <a href="general-settings.html">General Settings</a>
+  <a href="system-configuration.html">System Configuration</a>
+  <a href="manage-admins.html">Manage Admins</a>
+  <a href="admin-activity-logs.html">Activity Logs</a>
+  <a href="notifications.html">Notifications</a>
+  <a href="security-settings.html">Security Settings</a>
+  <a href="website-status.html" class="active">Website Status</a>
+
+  <div class="menu-title">ACCOUNT</div>
+  <a href="admin-login.html" id="logoutBtn">Logout</a>
+</aside>
+
+<main class="main">
+
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="menu-btn" onclick="toggleMenu()">☰</button>
+      <h2>Website Status</h2>
+    </div>
+    <div class="admin">Administrator Panel</div>
+  </header>
+
+  <div class="content">
+
+    <div class="heading">
+      <h1>Website Status &amp; Controls</h1>
+      <p>Monitor your website status and manage maintenance and registration settings.</p>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <small>Website Status</small>
+        <h2 id="siteStatus"><span class="dot"></span>Online</h2>
+        <div class="muted">Saved database setting</div>
+      </div>
+
+      <div class="card">
+        <small>Maintenance Mode</small>
+        <h2 id="maintenanceStatus">Disabled</h2>
+        <div class="muted">Database setting</div>
+      </div>
+
+      <div class="card">
+        <small>New Registrations</small>
+        <h2 id="registrationStatus">Open</h2>
+        <div class="muted">Registration setting</div>
+      </div>
+    </div>
+
+    <section class="panel">
+      <h3>Website Availability</h3>
+      <p class="desc">Manage your website availability settings.</p>
+
+      <div class="setting">
+        <div>
+          <strong>Maintenance Mode</strong>
+          <p>Enable or disable maintenance mode setting.</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="maintenance">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting">
+        <div>
+          <strong>Allow New Registrations</strong>
+          <p>Control the new registration setting.</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="registrations" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting">
+        <div>
+          <strong>Show Website Announcement</strong>
+          <p>Enable or disable the announcement setting.</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="announcementToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h3>Announcement &amp; Maintenance Message</h3>
+      <p class="desc">Enter the message you want to save in your database.</p>
+
+      <label class="field-label" for="messageTitle">Message Title</label>
+      <input type="text" id="messageTitle" placeholder="e.g. Scheduled Maintenance">
+
+      <label class="field-label" for="messageText">Message</label>
+      <textarea id="messageText" placeholder="Write your announcement or maintenance message here..."></textarea>
+
+      <label class="field-label" for="messageType">Message Type</label>
+      <select id="messageType">
+        <option value="info">Information</option>
+        <option value="warning">Warning</option>
+        <option value="maintenance">Maintenance</option>
+      </select>
+
+      <div id="preview">
+        <strong id="previewTitle">Announcement Preview</strong>
+        <p id="previewText" style="font-size:13px;line-height:1.6;margin-top:8px"></p>
+      </div>
+
+      <div class="actions">
+        <button class="primary" id="saveBtn">Save Settings</button>
+        <button class="secondary" id="resetBtn">Reset Defaults</button>
+      </div>
+
+      <div class="notice" id="notice" role="status" aria-live="polite"></div>
+    </section>
+
+    <div class="footer">Capitaxio Admin Panel · Website Status</div>
+
+  </div>
+</main>
+</div>
+
+<script>
+const SUPABASE_URL = "https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+
+const db = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+let currentUser = null;
+
+const defaults = {
+  maintenance_mode: false,
+  allow_registrations: true,
+  show_announcement: false,
+  message_title: "",
+  message_text: "",
+  message_type: "info"
+};
+
+const notice = document.getElementById("notice");
+const saveBtn = document.getElementById("saveBtn");
+
+function showMessage(text, isError = false) {
+  notice.style.display = "block";
+  notice.classList.toggle("error", isError);
+  notice.textContent = text;
+}
+
+function toggleMenu() {
+  document.getElementById("sidebar").classList.toggle("open");
+}
+
+async function checkAdmin() {
+  try {
+    const { data, error } = await db.auth.getSession();
+
+    if (error) throw error;
+
+    if (!data.session) {
+      window.location.href = "admin-login.html";
+      return false;
+    }
+
+    currentUser = data.session.user;
+
+    const { data: admin, error: adminError } = await db
+      .from("admins")
+      .select("user_id,is_active")
+      .eq("user_id", currentUser.id)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (adminError) throw adminError;
+
+    if (!admin) {
+      alert("Access denied. Active admin account required.");
+      await db.auth.signOut();
+      window.location.href = "admin-login.html";
+      return false;
+    }
+
+    return true;
+
+  } catch (error) {
+    showMessage("Admin check error: " + error.message, true);
+    return false;
+  }
+}
+
+function updateCards() {
+  const maintenance = document.getElementById("maintenance").checked;
+  const registrations = document.getElementById("registrations").checked;
+
+  document.getElementById("siteStatus").innerHTML = maintenance
+    ? '<span class="dot yellow"></span>Maintenance'
+    : '<span class="dot"></span>Online';
+
+  document.getElementById("maintenanceStatus").textContent =
+    maintenance ? "Enabled" : "Disabled";
+
+  document.getElementById("registrationStatus").textContent =
+    registrations ? "Open" : "Closed";
+}
+
+function updatePreview() {
+  const enabled = document.getElementById("announcementToggle").checked;
+  const message = document.getElementById("messageText").value.trim();
+  const title = document.getElementById("messageTitle").value.trim();
+
+  const preview = document.getElementById("preview");
+
+  if (enabled && message) {
+    document.getElementById("previewTitle").textContent =
+      title || "Website Announcement";
+
+    document.getElementById("previewText").textContent = message;
+    preview.style.display = "block";
+  } else {
+    preview.style.display = "none";
+  }
+}
+
+function loadForm(data) {
+  document.getElementById("maintenance").checked =
+    Boolean(data.maintenance_mode);
+
+  document.getElementById("registrations").checked =
+    Boolean(data.allow_registrations);
+
+  document.getElementById("announcementToggle").checked =
+    Boolean(data.show_announcement);
+
+  document.getElementById("messageTitle").value =
+    data.message_title || "";
+
+  document.getElementById("messageText").value =
+    data.message_text || "";
+
+  document.getElementById("messageType").value =
+    data.message_type || "info";
+
+  updateCards();
+  updatePreview();
+}
+
+function getFormData() {
+  return {
+    maintenance_mode: document.getElementById("maintenance").checked,
+    allow_registrations: document.getElementById("registrations").checked,
+    show_announcement: document.getElementById("announcementToggle").checked,
+    message_title: document.getElementById("messageTitle").value.trim(),
+    message_text: document.getElementById("messageText").value.trim(),
+    message_type: document.getElementById("messageType").value
+  };
+}
+
+async function loadSettings() {
+  showMessage("Loading website settings...");
+
+  const allowed = await checkAdmin();
+  if (!allowed) return;
+
+  try {
+    const { data, error } = await db
+      .from("website_status")
+      .select("*")
+      .eq("id", 1)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!data) {
+      showMessage("Settings row nahi mili. Supabase SQL check karein.", true);
+      return;
+    }
+
+    loadForm(data);
+    showMessage("Website settings successfully loaded from Supabase.");
+
+  } catch (error) {
+    showMessage("Database error: " + error.message, true);
+  }
+}
+
+async function saveSettings() {
+  notice.style.display = "none";
+
+  const allowed = await checkAdmin();
+  if (!allowed) return;
+
+  const settings = getFormData();
+
+  if (settings.show_announcement && !settings.message_text) {
+    showMessage(
+      "Announcement enabled hai. Pehle announcement message likhein.",
+      true
+    );
+    return;
+  }
+
+  if (!["info", "warning", "maintenance"].includes(settings.message_type)) {
+    showMessage("Invalid message type.", true);
+    return;
+  }
+
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Saving...";
+
+  try {
+    const databaseData = {
+      id: 1,
+      ...settings,
+      updated_by: currentUser.id,
+      updated_at: new Date().toISOString()
+    };
+
+    const { error } = await db
+      .from("website_status")
+      .upsert(databaseData, { onConflict: "id" });
+
+    if (error) throw error;
+
+    updateCards();
+    updatePreview();
+
+    showMessage("Success! Website settings Supabase mein save ho gayi hain.");
+
+  } catch (error) {
+    showMessage("Save error: " + error.message, true);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save Settings";
+  }
+}
+
+async function resetSettings() {
+  const confirmed = confirm(
+    "Kya aap website settings ko default par reset karna chahti hain?"
+  );
+
+  if (!confirmed) return;
+
+  loadForm(defaults);
+  await saveSettings();
+}
+
+document.getElementById("maintenance").addEventListener("change", updateCards);
+document.getElementById("registrations").addEventListener("change", updateCards);
+
+document.getElementById("announcementToggle").addEventListener("change", updatePreview);
+document.getElementById("messageTitle").addEventListener("input", updatePreview);
+document.getElementById("messageText").addEventListener("input", updatePreview);
+
+document.getElementById("saveBtn").addEventListener("click", saveSettings);
+document.getElementById("resetBtn").addEventListener("click", resetSettings);
+
+document.getElementById("logoutBtn").addEventListener("click", async event => {
+  event.preventDefault();
+  await db.auth.signOut();
+  window.location.href = "admin-login.html";
+});
+
+loadSettings();
+</script>
+</body>
+</html>

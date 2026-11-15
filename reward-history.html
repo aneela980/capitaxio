@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capitaxio - Reward History</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#0b1020;color:#f1f5f9}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:245px;flex-shrink:0;background:#11182b;padding:24px 15px}
+.logo{font-size:24px;font-weight:bold;color:#a78bfa;margin:0 10px 28px}
+.group{font-size:11px;color:#818ba5;text-transform:uppercase;margin:20px 10px 10px}
+.nav a{display:block;color:#c4cbe0;text-decoration:none;padding:11px 12px;margin:4px 0;border-radius:8px;font-size:13px}
+.nav a:hover,.nav a.active{background:#292247;color:#c4b5fd}
+.main{flex:1;min-width:0;padding:28px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:25px}
+h1{font-size:26px;margin-bottom:8px}
+.muted{color:#929bb3;font-size:13px;line-height:1.6}
+.pill{background:#292247;color:#c4b5fd;border-radius:20px;padding:9px 13px;font-size:12px}
+.notice{background:#201b36;border:1px solid #51417d;color:#d8ccff;padding:14px;border-radius:9px;font-size:13px;line-height:1.6;margin-bottom:20px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-bottom:20px}
+.card,.panel{background:#141c30;border:1px solid #273149;border-radius:13px;padding:20px}
+.card small{color:#929bb3;font-size:12px}
+.card h2{font-size:24px;margin:12px 0 5px}
+.panel{margin-bottom:20px}
+.panel h3{font-size:17px;margin-bottom:7px}
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin-top:20px}
+input,select{width:100%;background:#0c1324;color:#f1f5f9;border:1px solid #34405b;border-radius:8px;padding:12px;font-size:13px;min-width:0}
+button{border:0;border-radius:8px;padding:12px 15px;cursor:pointer;font-weight:bold;font-size:12px}
+.primary{background:#8b5cf6;color:white}
+.secondary{background:#273149;color:#e2e8f0}
+.table-wrap{width:100%;overflow-x:auto;margin-top:18px}
+table{width:100%;border-collapse:collapse;min-width:780px;text-align:left}
+th{font-size:11px;text-transform:uppercase;color:#929bb3;background:#101729}
+th,td{padding:15px 12px;border-bottom:1px solid #273149;font-size:12px;white-space:nowrap}
+td{color:#dbe2f2}
+.user{font-weight:bold}
+.sub{font-size:11px;color:#818ba5;margin-top:5px}
+.amount{color:#a7f3d0;font-weight:bold}
+.badge{display:inline-block;padding:6px 9px;border-radius:20px;font-size:11px}
+.completed{background:#12352f;color:#6ee7b7}
+.pending{background:#3b2e16;color:#fcd34d}
+.failed{background:#42212c;color:#fda4af}
+.empty{text-align:center;color:#929bb3;padding:28px}
+.table-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.actions{display:flex;gap:7px;flex-wrap:wrap}
+.footer{font-size:11px;color:#737f9a;margin-top:20px;line-height:1.6}
+#message{margin-top:15px}
+@media(max-width:950px){.sidebar{width:210px}.main{padding:20px}.stats{grid-template-columns:1fr}}
+@media(max-width:650px){
+.layout{display:block}
+.sidebar{width:100%;padding:15px}
+.logo{margin-bottom:12px}
+.nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}
+.group{grid-column:1/-1;margin-top:14px}
+.main{padding:17px 12px}
+h1{font-size:23px}
+.filters{grid-template-columns:1fr}
+.stats{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <div class="logo">CAPITAXIO</div>
+  <nav class="nav">
+    <div class="group">Main Menu</div>
+    <a href="admin.html">Dashboard</a>
+    <a href="manage-users.html">Manage Users</a>
+    <a href="deposits.html">Deposits</a>
+    <a href="withdrawals.html">Withdrawals</a>
+    <a href="payment-gateways.html">Payment Gateways</a>
+
+    <div class="group">System Management</div>
+    <a href="general-settings.html">General Settings</a>
+    <a href="system-configuration.html">System Configuration</a>
+    <a href="manage-admins.html">Manage Admins</a>
+    <a href="admin-activity-logs.html">Activity Logs</a>
+    <a href="notifications.html">Notifications</a>
+    <a href="security-settings.html">Security Settings</a>
+    <a href="website-status.html">Website Status</a>
+    <a href="backup-restore.html">Backup &amp; Restore</a>
+    <a href="support-tickets.html">Support Tickets</a>
+    <a href="reports-analytics.html">Reports &amp; Analytics</a>
+    <a href="referrals-management.html">Referral Management</a>
+    <a href="user-verification.html">User Verification</a>
+    <a href="reward-settings.html">Reward Settings</a>
+    <a class="active" href="reward-history.html">Reward History</a>
+    <a href="admin-login.html" id="logoutBtn">Logout</a>
+  </nav>
+</aside>
+
+<main class="main">
+
+  <div class="top">
+    <div>
+      <h1>Reward History</h1>
+      <p class="muted">View and filter user reward records.</p>
+    </div>
+    <span class="pill">Admin Panel</span>
+  </div>
+
+  <div class="notice">
+    <strong>Live Database:</strong>
+    Reward records Supabase database se load honge.
+    Is page par sample demo records use nahi ho rahe.
+  </div>
+
+  <section class="stats">
+    <div class="card">
+      <small>Displayed Records</small>
+      <h2 id="recordCount">0</h2>
+      <p class="muted">Current filtered records</p>
+    </div>
+
+    <div class="card">
+      <small>Completed Rewards</small>
+      <h2 id="completedCount">0</h2>
+      <p class="muted">Completed filtered entries</p>
+    </div>
+
+    <div class="card">
+      <small>Displayed Reward Points</small>
+      <h2 id="totalPoints">0</h2>
+      <p class="muted">Sum of filtered points</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="table-head">
+      <div>
+        <h3>Reward Records</h3>
+        <p class="muted">Search by name, user ID or reward reference.</p>
+      </div>
+
+      <div class="actions">
+        <button class="primary" id="exportBtn">Export CSV</button>
+        <button class="secondary" id="reloadBtn">Reload Records</button>
+      </div>
+    </div>
+
+    <div class="filters">
+      <input id="search" type="search"
+        placeholder="Search user or reference...">
+
+      <select id="statusFilter">
+        <option value="All">All statuses</option>
+        <option value="Completed">Completed</option>
+        <option value="Pending">Pending</option>
+        <option value="Failed">Failed</option>
+      </select>
+
+      <select id="typeFilter">
+        <option value="All">All reward types</option>
+        <option value="Daily Reward">Daily Reward</option>
+        <option value="Referral Reward">Referral Reward</option>
+        <option value="Bonus Reward">Bonus Reward</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Reference</th>
+            <th>Reward Type</th>
+            <th>Points</th>
+            <th>Date &amp; Time</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="rewardTable"></tbody>
+      </table>
+
+      <div id="emptyState" class="empty" hidden>
+        No matching reward records found.
+      </div>
+    </div>
+
+    <p id="message" class="muted" role="status" aria-live="polite"></p>
+  </section>
+
+  <p class="footer">
+    Capitaxio Admin Panel · Reward History connected to Supabase.
+  </p>
+
+</main>
+</div>
+
+<script>
+const SUPABASE_URL = "https://zwffgoenruzcctkyptjg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_6qL9pLwCjdfLAt6ftaSSTQ_SvWff4Ar";
+
+const db = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+let currentUser = null;
+let records = [];
+
+const table = document.getElementById("rewardTable");
+const search = document.getElementById("search");
+const statusFilter = document.getElementById("statusFilter");
+const typeFilter = document.getElementById("typeFilter");
+const message = document.getElementById("message");
+
+function safeText(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  })[char]);
+}
+
+function formatDate(value) {
+  if (!value) return "-";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return safeText(value);
+
+  return date.toLocaleString();
+}
+
+async function checkAdmin() {
+  try {
+    const { data: sessionData, error: sessionError } =
+      await db.auth.getSession();
+
+    if (sessionError) throw sessionError;
+
+    const session = sessionData.session;
+
+    if (!session) {
+      window.location.href = "admin-login.html";
+      return false;
+    }
+
+    currentUser = session.user;
+
+    const { data: admin, error: adminError } = await db
+      .from("admins")
+      .select("user_id,is_active")
+      .eq("user_id", currentUser.id)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (adminError) throw adminError;
+
+    if (!admin) {
+      alert("Access denied. Active admin account required.");
+      await db.auth.signOut();
+      window.location.href = "admin-login.html";
+      return false;
+    }
+
+    return true;
+
+  } catch (error) {
+    message.textContent = "Admin check error: " + error.message;
+    return false;
+  }
+}
+
+function filteredRecords() {
+  const query = search.value.trim().toLowerCase();
+
+  return records.filter(record => {
+    const matchesSearch = [
+      record.reference,
+      record.user_id,
+      record.user_name,
+      record.reward_type
+    ].some(value =>
+      String(value ?? "").toLowerCase().includes(query)
+    );
+
+    const matchesStatus =
+      statusFilter.value === "All" ||
+      record.status === statusFilter.value;
+
+    const matchesType =
+      typeFilter.value === "All" ||
+      record.reward_type === typeFilter.value;
+
+    return matchesSearch && matchesStatus && matchesType;
+  });
+}
+
+function render() {
+  const list = filteredRecords();
+
+  table.innerHTML = list.map(record => {
+    const statusClass = String(record.status).toLowerCase();
+
+    return `
+      <tr>
+        <td>
+          <div class="user">${safeText(record.user_name)}</div>
+          <div class="sub">${safeText(record.user_id || "No user ID")}</div>
+        </td>
+
+        <td>${safeText(record.reference)}</td>
+        <td>${safeText(record.reward_type)}</td>
+        <td class="amount">+${Number(record.points || 0).toLocaleString("en-US")}</td>
+        <td>${formatDate(record.created_at)}</td>
+        <td>
+          <span class="badge ${statusClass}">
+            ${safeText(record.status)}
+          </span>
+        </td>
+        <td>
+          <button class="secondary" data-view="${safeText(record.id)}">
+            View
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  document.getElementById("emptyState").hidden = list.length !== 0;
+
+  document.getElementById("recordCount").textContent = list.length;
+
+  document.getElementById("completedCount").textContent =
+    list.filter(record => record.status === "Completed").length;
+
+  document.getElementById("totalPoints").textContent =
+    list.reduce((sum, record) =>
+      sum + Number(record.points || 0), 0
+    ).toLocaleString("en-US");
+}
+
+async function loadRecords() {
+  message.textContent = "Loading reward records...";
+  table.innerHTML = "";
+
+  const allowed = await checkAdmin();
+  if (!allowed) return;
+
+  try {
+    const { data, error } = await db
+      .from("reward_history")
+      .select("id,reference,user_id,user_name,reward_type,points,status,created_at")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    records = data || [];
+    render();
+
+    message.textContent = records.length
+      ? "Reward records loaded successfully."
+      : "Database connected. Abhi koi reward record mojood nahi.";
+
+  } catch (error) {
+    records = [];
+    render();
+    message.textContent = "Database error: " + error.message;
+  }
+}
+
+table.addEventListener("click", event => {
+  const button = event.target.closest("[data-view]");
+  if (!button) return;
+
+  const record = records.find(item =>
+    String(item.id) === button.dataset.view
+  );
+
+  if (!record) return;
+
+  message.textContent =
+    "Reference: " + record.reference +
+    " | User: " + record.user_name +
+    " | User ID: " + (record.user_id || "Not available") +
+    " | Type: " + record.reward_type +
+    " | Points: " + record.points +
+    " | Date: " + formatDate(record.created_at) +
+    " | Status: " + record.status;
+});
+
+[search, statusFilter, typeFilter].forEach(control => {
+  control.addEventListener("input", render);
+  control.addEventListener("change", render);
+});
+
+document.getElementById("reloadBtn").addEventListener("click", () => {
+  loadRecords();
+});
+
+document.getElementById("exportBtn").addEventListener("click", () => {
+  const list = filteredRecords();
+
+  if (!list.length) {
+    message.textContent = "Export ke liye koi record nahi mila.";
+    return;
+  }
+
+  const columns = [
+    "reference",
+    "user_id",
+    "user_name",
+    "reward_type",
+    "points",
+    "created_at",
+    "status"
+  ];
+
+  const csvCell = value =>
+    '"' + String(value ?? "").replace(/"/g, '""') + '"';
+
+  const csv = [
+    columns.join(","),
+    ...list.map(record =>
+      columns.map(column => csvCell(record[column])).join(",")
+    )
+  ].join("\r\n");
+
+  const blob = new Blob(["\uFEFF" + csv], {
+    type: "text/csv;charset=utf-8;"
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "capitaxio-reward-history.csv";
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  URL.revokeObjectURL(url);
+
+  message.textContent = "Reward history CSV export ho gayi.";
+});
+
+document.getElementById("logoutBtn").addEventListener("click", async event => {
+  event.preventDefault();
+  await db.auth.signOut();
+  window.location.href = "admin-login.html";
+});
+
+loadRecords();
+</script>
+</body>
+</html>

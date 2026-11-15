@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notice Board | Capitaxio Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin-embed.js"></script>
+</head>
+<body style="visibility:hidden">
+<div id="app"></div>
+<script>
+window.PAGE = {
+ "title": "Notice Board",
+ "description": "Users ke liye khabar ya elaan. Active notices user ko dikhne ke qabil hote hain.",
+ "table": "notices",
+ "orderBy": "created_at",
+ "columns": [
+  {
+   "key": "title",
+   "label": "Title",
+   "type": "text"
+  },
+  {
+   "key": "message",
+   "label": "Message",
+   "type": "text"
+  },
+  {
+   "key": "notice_type",
+   "label": "Type",
+   "type": "badge"
+  },
+  {
+   "key": "is_active",
+   "label": "Active",
+   "type": "bool"
+  },
+  {
+   "key": "created_at",
+   "label": "Date",
+   "type": "date"
+  }
+ ],
+ "form": [
+  {
+   "key": "title",
+   "label": "Title",
+   "type": "text",
+   "required": true,
+   "maxlength": 120
+  },
+  {
+   "key": "message",
+   "label": "Message",
+   "type": "textarea",
+   "required": true,
+   "maxlength": 1000
+  },
+  {
+   "key": "notice_type",
+   "label": "Type",
+   "type": "select",
+   "options": [
+    "info",
+    "success",
+    "warning"
+   ],
+   "default": "info"
+  },
+  {
+   "key": "is_active",
+   "label": "Active (users ko dikhe)",
+   "type": "checkbox",
+   "default": true
+  }
+ ],
+ "canAdd": true,
+ "canEdit": true,
+ "canDelete": true,
+ "toggleKey": "is_active",
+ "searchKeys": [
+  "title",
+  "message"
+ ],
+ "addLabel": "+ New Notice"
+};
+</script>
+<script src="admin-crud.js"></script>
+</body>
+</html>
